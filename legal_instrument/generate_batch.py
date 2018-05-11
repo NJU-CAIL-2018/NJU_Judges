@@ -66,7 +66,7 @@ def change_label_to_one_hot(label, max):
 
 
 # read file into memory
-def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict):
+def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict, one_hot = True):
     data = []
     # control data size
     i = 0
@@ -74,7 +74,7 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
     data_y = []
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
-        while line and i < 100:
+        while line and i < 1000:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['accusation']
@@ -82,7 +82,10 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
             for index, accusation in enumerate(l):
                 if accusation in accu_dict:
                     data_x.append(change_fact_to_vector(obj['fact'], embedding, dictionary))
-                    data_y.append(change_label_to_one_hot(accu_dict[accusation], accu_size))
+                    if one_hot:
+                        data_y.append(change_label_to_one_hot(accu_dict[accusation], accu_size))
+                    else:
+                        data_y.append(accu_dict[accusation])
 
             line = f.readline()
 

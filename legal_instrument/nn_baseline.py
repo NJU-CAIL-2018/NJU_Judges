@@ -21,7 +21,7 @@ print("reading complete!")
 
 # just test generate_accu_batch
 x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y, len(accu_dict))
-print(x)
+print(x.shape)
 
 print("data load complete")
 print("The model begin here")

@@ -1,7 +1,7 @@
 import legal_instrument.generate_batch as generator
 import xgboost as xgb
 import legal_instrument.system_path as constant
-#import pandas as pd
+
 
 # param
 training_batch_size = 1024
@@ -26,28 +26,36 @@ x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y,
 print("data load complete")
 print("The model begin here")
 
-
-
-dtrain = xgb.DMatrix(train_data_x, train_data_y)
-
 clf = xgb.XGBClassifier(learning_rate=0.08, objective='multi:softmax', n_estimators=100, max_depth=6)
 
 # try to load model
-try:
-    boost = xgb.Booster()
-    boost.load_model('./xgboost_model/1.model')
-    clf.booster = boost
-except:
-    print("No model to read")
+# try:
+#     boost = xgb.Booster()
+#     boost.load_model('./xgboost_model/1.model')
+#     clf.booster = boost
+# except:
+#     print("No model to read")
 
+# training begin here!
 train_data_y = train_data_y.reshape([len(train_data_y)])
 valid_data_y = valid_data_y.reshape([len(valid_data_y)])
 clf.fit(train_data_x, train_data_y,
-        eval_set=[(train_data_x, train_data_y),
-                  (valid_data_x, valid_data_y)], eval_metric='merror', verbose=True)
+        eval_set=[(train_data_x, train_data_y)], eval_metric='merror', verbose=True)
 
 clf.get_booster().save_model('./xgboost_model/1.model')
 
 evals_result = clf.evals_result()
+
+# visualize
+try:
+    import pandas as pd
+    import matplotlib.pylab as plt
+    feat_imp = pd.Series(clf.get_booster().get_fscore()).sort_values(ascending=False)
+    feat_imp.plot(kind='bar', title='Feature Importances')
+    plt.ylabel('Feature Importance Score')
+    plt.show()
+except:
+    print("please install pandas and matplotlib!")
+
 
 print(evals_result)

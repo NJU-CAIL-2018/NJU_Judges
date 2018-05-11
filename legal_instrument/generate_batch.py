@@ -5,6 +5,8 @@ import jieba
 import legal_instrument.system_path as constant
 import pickle
 import numpy as np
+import datetime
+
 
 # param
 embedding_size = 128
@@ -56,16 +58,17 @@ def change_fact_to_vector(fact, embedding, dictionary):
 
     if count != 0:
         result = result / count
-    return result.tolist()
+    return result
 
 
 # label : 数据列，one-hot编码之后非零的列
 # max : 总类数
 def change_label_to_one_hot(label, max):
-    return np.eye(max)[label].tolist()
+    return np.eye(max)[label]
 
 
 # read file into memory
+# this function is slower than below
 # def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict, one_hot = True):
 #     data = []
 #     # control data size
@@ -75,10 +78,13 @@ def change_label_to_one_hot(label, max):
 #         data_y = np.zeros([1, len(accu_dict)])
 #     else:
 #         data_y = np.zeros([1, 1], dtype=int)
+#
+#     time = datetime.datetime.now()
+#
 #     with open(file_name, "r", encoding="UTF-8") as f:
 #         line = f.readline()
 #
-#         while line:
+#         while line and i < 10000:
 #             i = i + 1
 #             obj = json.loads(line)
 #             l = obj['meta']['accusation']
@@ -94,6 +100,8 @@ def change_label_to_one_hot(label, max):
 #                 print("read ", i, "lines")
 #             line = f.readline()
 #
+#     print(datetime.datetime.now() - time)
+#
 #     return data_x[1:], data_y[1:]
 
 def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict, one_hot = True):
@@ -103,10 +111,11 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
     data_x = []
     data_y = []
 
+    time = datetime.datetime.now()
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line and i < 100:
+        while line and i < 1001:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['accusation']
@@ -122,7 +131,19 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
                 print("read ", i, "lines")
             line = f.readline()
 
-    return np.ndarray(data_x), np.ndarray(data_y)
+    result_x = np.ndarray([len(data_x), embedding_size])
+    if one_hot:
+        result_y = np.ndarray([len(data_y), accu_size])
+    else:
+        result_y = np.ndarray([len(data_y)])
+
+    for i in range(len(data_x)):
+        result_x[i] = data_x[i]
+        result_y[i] = data_y[i]
+
+    print(datetime.datetime.now() - time)
+
+    return result_x, result_y
 
 
 def generate_batch(batch_size, data_x, data_y, label_size):

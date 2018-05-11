@@ -15,12 +15,13 @@ accu_dict, reverse_accu_dict = generator.read_accu()
 word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
 
 print("reading data from training set...")
-train_data_x, train_data_y = generator.read_data(constant.DATA_TRAIN, len(accu_dict), embedding, word_dict, accu_dict)
-valid_data_x, valid_data_y = generator.read_data(constant.DATA_VALID, len(accu_dict), embedding, word_dict, accu_dict)
+train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, len(accu_dict), embedding, word_dict, accu_dict)
+valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, len(accu_dict), embedding, word_dict, accu_dict)
 print("reading complete!")
 
 # just test generate_accu_batch
-x, y = generator.generate_accu_batch(training_batch_size, train_data_x, train_data_y, len(accu_dict))
+x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y, len(accu_dict))
+print(x)
 
 print("data load complete")
 print("The model begin here")
@@ -84,15 +85,15 @@ with tf.Session() as sess:
 
     # training part
     for i in range(iteration):
-        x, y = generator.generate_accu_batch(training_batch_size, train_data_x, train_data_y, len(accu_dict))
+        x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y, len(accu_dict))
 
         _, summary = sess.run([train_step, merged], feed_dict={xs: x, ys: y})
         writer.add_summary(summary, i)
 
         if i % 1000 == 0:
             train_accuracy = sess.run(accuracy, feed_dict={xs: x, ys: y})
-            valid_x, valid_y = generator.generate_accu_batch(valid_batch_size, valid_data_x, valid_data_y,
-                                                             len(accu_dict))
+            valid_x, valid_y = generator.generate_batch(valid_batch_size, valid_data_x, valid_data_y,
+                                                        len(accu_dict))
             valid_accuracy = sess.run(accuracy, feed_dict={xs: valid_x, ys: valid_y})
             print("step %d, training accuracy %g" % (i, train_accuracy))
             print("step %d, valid accuracy %g" % (i, valid_accuracy))

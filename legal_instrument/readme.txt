@@ -21,7 +21,7 @@ embedding : 词向量   index -> vector
 reverse_word_dictionary : 反向词典  index -> 单词
 
 ##比较重要
-3.read_data : 加载数据集
+3.read_data_in_accu_format : 加载用于罪名预测的数据集
 参数：
 file_name : 数据文件名, 如DATA_TRAIN, DATA_VALID
 accu_size : 罪名字典大小
@@ -33,15 +33,15 @@ data_x : 数据集的特征向量
 data_y : 数据集的标签，one_hot形式
 
 ##重要
-4.generate_accu_batch ： 生成预测罪名的特征向量和标签
+4.generate_batch ： 依据输入的数据随机选取batch_size个数据生成一个batch
 参数:
 batch_size : 每次生成的数据数量
 data_x : 数据集的特征向量
 data_y : 数据集的标签
-accu_size : 罪名字典大小
+label_size : 预测标签分类数量
 返回值:
 x : 特征向量 shape = [batch_size, 词向量长度]
-y : 标签 shape = [batch_size, 罪名词典长度]
+y : 标签 shape = [batch_size, 预测标签分类数量]
 
 nn_baseline文件 : 一个以神经网络作为基线的模型，10000迭代后准确度为0.58  验证集准确度为0.56 目前为欠拟合状态
 强烈建议不要修改此文件，新建一个model文件进行修改，因为此文件为基线模型

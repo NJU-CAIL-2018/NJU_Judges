@@ -48,10 +48,14 @@ def get_dictionary_and_embedding():
 
 def change_fact_to_vector(fact, embedding, dictionary):
     result = np.zeros(embedding_size)
+    count = 0
     for word in list(jieba.cut(fact, cut_all=False)):
         if word in dictionary:
+            count = count + 1
             result += embedding[dictionary[word]]
 
+    if count != 0:
+        result = result / count
     return result
 
 
@@ -62,7 +66,7 @@ def change_label_to_one_hot(label, max):
 
 
 # read file into memory
-def read_data(file_name, accu_size, embedding, dictionary, accu_dict):
+def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict):
     data = []
     # control data size
     i = 0
@@ -70,7 +74,7 @@ def read_data(file_name, accu_size, embedding, dictionary, accu_dict):
     data_y = []
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
-        while line:
+        while line and i < 100:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['accusation']
@@ -79,14 +83,15 @@ def read_data(file_name, accu_size, embedding, dictionary, accu_dict):
                 if accusation in accu_dict:
                     data_x.append(change_fact_to_vector(obj['fact'], embedding, dictionary))
                     data_y.append(change_label_to_one_hot(accu_dict[accusation], accu_size))
+
             line = f.readline()
 
     return data_x, data_y
 
 
-def generate_accu_batch(batch_size, data_x, data_y, accu_size):
+def generate_batch(batch_size, data_x, data_y, label_size):
     x = np.ndarray([batch_size, embedding_size])
-    y = np.ndarray([batch_size, accu_size], dtype=int)
+    y = np.ndarray([batch_size, label_size], dtype=int)
 
     for i in range(batch_size):
         index = random.randint(0, len(data_x) - 1)

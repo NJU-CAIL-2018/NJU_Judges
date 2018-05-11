@@ -56,25 +56,57 @@ def change_fact_to_vector(fact, embedding, dictionary):
 
     if count != 0:
         result = result / count
-    return result
+    return result.tolist()
 
 
 # label : 数据列，one-hot编码之后非零的列
 # max : 总类数
 def change_label_to_one_hot(label, max):
-    return np.eye(max)[label]
+    return np.eye(max)[label].tolist()
 
 
 # read file into memory
+# def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict, one_hot = True):
+#     data = []
+#     # control data size
+#     i = 0
+#     data_x = np.zeros([1, embedding_size])
+#     if one_hot :
+#         data_y = np.zeros([1, len(accu_dict)])
+#     else:
+#         data_y = np.zeros([1, 1], dtype=int)
+#     with open(file_name, "r", encoding="UTF-8") as f:
+#         line = f.readline()
+#
+#         while line:
+#             i = i + 1
+#             obj = json.loads(line)
+#             l = obj['meta']['accusation']
+#
+#             for index, accusation in enumerate(l):
+#                 if accusation in accu_dict:
+#                     data_x = np.row_stack((data_x, change_fact_to_vector(obj['fact'], embedding, dictionary)))
+#                     if one_hot:
+#                         data_y = np.row_stack((data_y, change_label_to_one_hot(accu_dict[accusation], accu_size)))
+#                     else:
+#                         data_y = np.row_stack((data_y,accu_dict[accusation]))
+#             if i % 1000 == 0:
+#                 print("read ", i, "lines")
+#             line = f.readline()
+#
+#     return data_x[1:], data_y[1:]
+
 def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict, one_hot = True):
     data = []
     # control data size
     i = 0
     data_x = []
     data_y = []
+
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
-        while line and i < 1000:
+
+        while line and i < 100:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['accusation']
@@ -86,10 +118,11 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
                         data_y.append(change_label_to_one_hot(accu_dict[accusation], accu_size))
                     else:
                         data_y.append(accu_dict[accusation])
-
+            if i % 1000 == 0:
+                print("read ", i, "lines")
             line = f.readline()
 
-    return data_x, data_y
+    return np.ndarray(data_x), np.ndarray(data_y)
 
 
 def generate_batch(batch_size, data_x, data_y, label_size):

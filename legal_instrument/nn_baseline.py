@@ -11,6 +11,7 @@ embedding_size = 128
 iteration = 10000
 ##
 
+
 accu_dict, reverse_accu_dict = generator.read_accu()
 word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
 
@@ -50,7 +51,7 @@ ys = tf.placeholder(tf.float32, [None, len(accu_dict)])
 # 添加隐藏层1
 l1 = add_layer("layer1", xs, embedding_size, 200, activation_function=tf.sigmoid)
 # 添加隐藏层2
-# l2 = add_layer("layer2", l1, 20, 15, activation_function=tf.sigmoid)
+l2 = add_layer("layer2", l1, 200, 200, activation_function=tf.sigmoid)
 # 添加输出层
 prediction = add_layer("layer3", l1, 200, len(accu_dict), activation_function=tf.identity)
 

@@ -115,7 +115,7 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line and i < 1001:
+        while line:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['accusation']

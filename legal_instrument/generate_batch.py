@@ -40,9 +40,9 @@ def read_accu():
 
 
 def get_dictionary_and_embedding():
-    with open("./dump_data/dump_embedding.txt", "rb") as f:
+    with open("./dump_data/word_vector/dump_embedding.txt", "rb") as f:
         embedding = pickle.load(f)
-    with open("./dump_data/dump_dict.txt", "rb") as f:
+    with open("./dump_data/word_vector/dump_dict.txt", "rb") as f:
         word_dictionary = pickle.load(f)
 
     return word_dictionary, embedding, dict(zip(word_dictionary.values(), word_dictionary.keys()))
@@ -123,10 +123,8 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
             for index, accusation in enumerate(l):
                 if accusation in accu_dict:
                     data_x.append(change_fact_to_vector(obj['fact'], embedding, dictionary))
-                    if one_hot:
-                        data_y.append(change_label_to_one_hot(accu_dict[accusation], accu_size))
-                    else:
-                        data_y.append(accu_dict[accusation])
+                    data_y.append(accu_dict[accusation])
+
             if i % 1000 == 0:
                 print("read ", i, "lines")
             line = f.readline()
@@ -134,21 +132,28 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
     result_x = np.ndarray([len(data_x), embedding_size])
     if one_hot:
         result_y = np.ndarray([len(data_y), accu_size])
+        for i in range(len(data_x)):
+            result_x[i] = data_x[i]
+            result_y[i] = change_label_to_one_hot(data_y[i], accu_size)
+
     else:
         result_y = np.ndarray([len(data_y)])
-
-    for i in range(len(data_x)):
-        result_x[i] = data_x[i]
-        result_y[i] = data_y[i]
+        for i in range(len(data_x)):
+            result_x[i] = data_x[i]
+            result_y[i] = data_y[i]
 
     print(datetime.datetime.now() - time)
 
     return result_x, result_y
 
 
-def generate_batch(batch_size, data_x, data_y, label_size):
+def generate_batch(batch_size, data_x, data_y):
     x = np.ndarray([batch_size, embedding_size])
-    y = np.ndarray([batch_size, label_size], dtype=int)
+    if len(data_y.shape) > 1:
+        y = np.ndarray([batch_size, len(data_y[0])], dtype=int)
+    else:
+        y = np.ndarray([batch_size], dtype=int)
+    #print(len(data_y[0]))
 
     for i in range(batch_size):
         index = random.randint(0, len(data_x) - 1)

@@ -12,19 +12,20 @@ label_size = 1
 
 print("reading data from training set...")
 try:
-    with open('./dump_data/dump_train_x.txt', 'rb') as f:
+    with open('./dump_data/xgboost/dump_train_x.txt', 'rb') as f:
         train_data_x = pickle.load(f)
 
-    with open('./dump_data/dump_train_y_label.txt', 'rb') as f:
+    with open('./dump_data/xgboost/dump_train_y_label.txt', 'rb') as f:
         train_data_y = pickle.load(f)
 
-    with open('./dump_data/dump_valid_x.txt', 'rb') as f:
+    with open('./dump_data/xgboost/dump_valid_x.txt', 'rb') as f:
         valid_data_x = pickle.load(f)
 
-    with open('./dump_data/dump_valid_y_label.txt', 'rb') as f:
+    with open('./dump_data/xgboost/dump_valid_y_label.txt', 'rb') as f:
         valid_data_y = pickle.load(f)
 except:
-    print("No dump file read original file! Please wait...")
+    print("No dump file read original file! Please wait... "
+          "If u want to accelerate this process, please see read_me -> transform_data_to_feature_and_dump")
     accu_dict, reverse_accu_dict = generator.read_accu()
     word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
 
@@ -36,7 +37,7 @@ except:
 print("reading complete!")
 
 # just test generate_accu_batch
-train_data_x_for_validate, train_data_y_for_validate = generator.generate_batch(valid_batch_size, train_data_x, train_data_y, label_size)
+train_data_x_for_validate, train_data_y_for_validate = generator.generate_batch(valid_batch_size, train_data_x, train_data_y)
 
 print("data load complete")
 print("The model begin here")
@@ -44,6 +45,7 @@ print("The model begin here")
 clf = xgb.XGBClassifier(learning_rate=0.05, objective='multi:softmax',
                         n_estimators=100, max_depth=4, reg_alpha = 0.2, min_child_weight=3)
 
+print(valid_data_y.shape)
 # try to load model
 # try:
 #     boost = xgb.Booster()
@@ -54,7 +56,7 @@ clf = xgb.XGBClassifier(learning_rate=0.05, objective='multi:softmax',
 
 # training begin here!
 train_data_y = train_data_y.reshape([len(train_data_y)])
-valid_data_y = valid_data_y.reshape([len(valid_data_y)])
+valid_data_y = valid_data_y.reshape([valid_data_y.shape[0]])
 train_data_y_for_validate = train_data_y_for_validate.reshape(valid_batch_size)
 clf.fit(train_data_x, train_data_y,
         eval_set=[(train_data_x_for_validate, train_data_y_for_validate),

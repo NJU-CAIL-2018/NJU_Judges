@@ -1,4 +1,5 @@
 # This model is a base line model using neural network
+import pickle
 
 import legal_instrument.generate_batch as generator
 import tensorflow as tf
@@ -8,20 +9,38 @@ import legal_instrument.system_path as constant
 training_batch_size = 128
 valid_batch_size = 1024
 embedding_size = 128
-iteration = 10000
+iteration = 100000
 ##
 
 
-accu_dict, reverse_accu_dict = generator.read_accu()
-word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
-
 print("reading data from training set...")
-train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, len(accu_dict), embedding, word_dict, accu_dict)
-valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, len(accu_dict), embedding, word_dict, accu_dict)
+try:
+    with open('./dump_data/nn/dump_train_x.txt', 'rb') as f:
+        train_data_x = pickle.load(f)
+
+    with open('./dump_data/nn/dump_train_y_label.txt', 'rb') as f:
+        train_data_y = pickle.load(f)
+
+    with open('./dump_data/nn/dump_valid_x.txt', 'rb') as f:
+        valid_data_x = pickle.load(f)
+
+    with open('./dump_data/nn/dump_valid_y_label.txt', 'rb') as f:
+        valid_data_y = pickle.load(f)
+except:
+    print("No dump file read original file! Please wait... "
+          "If u want to accelerate this process, please see read_me -> transform_data_to_feature_and_dump")
+    accu_dict, reverse_accu_dict = generator.read_accu()
+    word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
+
+    train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, len(accu_dict), embedding,
+                                                                    word_dict, accu_dict, one_hot=False)
+    valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, len(accu_dict), embedding,
+                                                                    word_dict, accu_dict, one_hot=False)
+
 print("reading complete!")
 
 # just test generate_accu_batch
-x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y, len(accu_dict))
+x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y)
 print(x.shape)
 
 print("data load complete")
@@ -47,13 +66,13 @@ def add_layer(layerName, inputs, in_size, out_size, activation_function=None):
 
 
 xs = tf.placeholder(tf.float32, [None, embedding_size])
-ys = tf.placeholder(tf.float32, [None, len(accu_dict)])
+ys = tf.placeholder(tf.float32, [None, len(train_data_y[0])])
 # 添加隐藏层1
 l1 = add_layer("layer1", xs, embedding_size, 200, activation_function=tf.sigmoid)
 # 添加隐藏层2
 l2 = add_layer("layer2", l1, 200, 200, activation_function=tf.sigmoid)
 # 添加输出层
-prediction = add_layer("layer3", l1, 200, len(accu_dict), activation_function=tf.identity)
+prediction = add_layer("layer3", l1, 200, len(train_data_y[0]), activation_function=tf.identity)
 
 # 添加正则项
 regularizer = tf.contrib.layers.l2_regularizer(scale=0.001)
@@ -75,28 +94,27 @@ with tf.Session() as sess:
     # 保存参数所用的保存器
     saver = tf.train.Saver(max_to_keep=2)
     # get latest file
-    ckpt = tf.train.get_checkpoint_state('./modelStore')
+    ckpt = tf.train.get_checkpoint_state('./nn_model')
     if ckpt and ckpt.model_checkpoint_path:
         saver.restore(sess, ckpt.model_checkpoint_path)
 
     # 可视化部分
     tf.summary.scalar("loss", loss)
     merged = tf.summary.merge_all()
-    writer = tf.summary.FileWriter("./logs", sess.graph)
+    writer = tf.summary.FileWriter("./nn_logs", sess.graph)
 
     # training part
     for i in range(iteration):
-        x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y, len(accu_dict))
+        x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y)
 
         _, summary = sess.run([train_step, merged], feed_dict={xs: x, ys: y})
         writer.add_summary(summary, i)
 
         if i % 1000 == 0:
             train_accuracy = sess.run(accuracy, feed_dict={xs: x, ys: y})
-            valid_x, valid_y = generator.generate_batch(valid_batch_size, valid_data_x, valid_data_y,
-                                                        len(accu_dict))
+            valid_x, valid_y = generator.generate_batch(valid_batch_size, valid_data_x, valid_data_y)
             valid_accuracy = sess.run(accuracy, feed_dict={xs: valid_x, ys: valid_y})
             print("step %d, training accuracy %g" % (i, train_accuracy))
             print("step %d, valid accuracy %g" % (i, valid_accuracy))
 
-            saver.save(sess, "./modelStore/base_line", global_step=i)
+            saver.save(sess, "./nn_model/base_line", global_step=i)

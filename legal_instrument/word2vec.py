@@ -33,7 +33,7 @@ data_index = 0
 def get_fact():
     # 读取停用词
     stop_words = []
-    with open('./dump_data/stop_words.txt', "r", encoding="UTF-8") as f:
+    with open('./dump_data/word_vector/stop_words.txt', "r", encoding="UTF-8") as f:
         line = f.readline()
         while line:
             stop_words.append(line[:-1])
@@ -48,10 +48,10 @@ def get_fact():
             obj = json.loads(line)
             raw_words = list(jieba.cut(obj['fact'], cut_all=False))
             for word in raw_words:
-                if regular_filter(word):
+                if regular_filter(word) and len(word) > 1:
                     if word not in stop_words:
                         result.append(word)
-            result.append('++')
+            result.append('+')
             line = f.readline()
 
     return result
@@ -93,8 +93,8 @@ def generate_batch(batch_size, num_skips, skip_window):
     labels = np.ndarray(shape=(batch_size, 1), dtype=np.int32)
     span = 2 * skip_window + 1  # [ skip_window target skip_window ]
     buffer = collections.deque(maxlen=span)
-    buffer.append(dictionary['++'])
-    while dictionary['++'] in buffer:
+    buffer.append(dictionary['+'])
+    while dictionary['+'] in buffer:
         fill_buffer(buffer, span)
 
     for i in range(batch_size // num_skips):
@@ -109,7 +109,7 @@ def generate_batch(batch_size, num_skips, skip_window):
         buffer.append(data[data_index])
         data_index = (data_index + 1) % len(data)
 
-        while dictionary['++'] in buffer:
+        while dictionary['+'] in buffer:
             fill_buffer(buffer, span)
 
     return batch, labels
@@ -181,7 +181,7 @@ with graph.as_default():
     init = tf.global_variables_initializer()
 
 # Step 5: Begin training.
-num_steps = 10000
+num_steps = 50000
 with tf.Session(graph=graph) as session:
     # We must initialize all variables before we use them.
     init.run()
@@ -205,7 +205,7 @@ with tf.Session(graph=graph) as session:
             average_loss = 0
 
         # Note that this is expensive (~20% slowdown if computed every 500 steps)
-        if step % 8000 == 0:
+        if step % 10000 == 0:
             sim = similarity.eval()
             for i in range(valid_size):
                 valid_word = reverse_dictionary[valid_examples[i]]
@@ -219,11 +219,11 @@ with tf.Session(graph=graph) as session:
                 print(log_str)
     final_embeddings = normalized_embeddings.eval()
 
-    f = open('dump_embedding.txt', 'wb')
+    f = open('./dump_data/word_vector/dump_embedding.txt', 'wb')
     pickle.dump(final_embeddings, f)
     f.close()
 
-    f = open('dump_dict.txt', 'wb')
+    f = open('./dump_data/word_vector/dump_dict.txt', 'wb')
     pickle.dump(dictionary, f)
     f.close()
 

@@ -76,5 +76,5 @@ def dump_data_for_xgboost():
 
     print("dump complete!")
 
-#dump_data_for_nn()
+dump_data_for_nn()
 dump_data_for_xgboost()

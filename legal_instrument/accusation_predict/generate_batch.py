@@ -40,9 +40,9 @@ def read_accu():
 
 
 def get_dictionary_and_embedding():
-    with open("./dump_data/word_vector/dump_embedding.txt", "rb") as f:
+    with open("../dump_data/word_vector/dump_embedding.txt", "rb") as f:
         embedding = pickle.load(f)
-    with open("./dump_data/word_vector/dump_dict.txt", "rb") as f:
+    with open("../dump_data/word_vector/dump_dict.txt", "rb") as f:
         word_dictionary = pickle.load(f)
 
     return word_dictionary, embedding, dict(zip(word_dictionary.values(), word_dictionary.keys()))

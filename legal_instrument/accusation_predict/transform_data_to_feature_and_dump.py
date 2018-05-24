@@ -1,7 +1,9 @@
-import legal_instrument.generate_batch as generator
-import legal_instrument.system_path as constant
 import pickle
+
 import numpy as np
+
+import legal_instrument.accusation_predict.generate_batch as generator
+import legal_instrument.system_path as constant
 
 
 def dump_data_for_nn():

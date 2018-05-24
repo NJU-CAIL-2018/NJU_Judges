@@ -32,7 +32,7 @@ def read_accu():
     with open(constant.ACCU_FILE, "r", encoding="UTF-8") as f:
         line = f.readline()
         while line:
-            accu_dict[line.strip()] = len(accu_dict)
+            accu_dict[line.strip()] = len(accu_dict) + 1
             line = f.readline()
     reverse_accu_dict = dict(zip(accu_dict.values(), accu_dict.keys()))
 

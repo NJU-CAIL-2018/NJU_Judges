@@ -19,7 +19,7 @@ skip_window = 2
 num_skips = 1
 valid_size = 9  # 切记这个数字要和len(valid_word)对应，要不然会报错哦
 valid_window = 100
-num_sampled = 64  # Number of negative examples to sample.
+num_sampled = 128  # Number of negative examples to sample.
 vocabulary_size = 10000
 ##
 
@@ -181,7 +181,7 @@ with graph.as_default():
     init = tf.global_variables_initializer()
 
 # Step 5: Begin training.
-num_steps = 50000
+num_steps = 100000
 with tf.Session(graph=graph) as session:
     # We must initialize all variables before we use them.
     init.run()

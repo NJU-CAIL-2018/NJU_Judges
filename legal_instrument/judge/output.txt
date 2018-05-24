@@ -1,0 +1,1 @@
+{"accusation": [1],"imprisonment": 4,"articles": [5, 7, 9]}

@@ -2,7 +2,7 @@ import pickle
 
 import xgboost as xgb
 
-import legal_instrument.accusation_predict.generate_batch as generator
+import legal_instrument.data_util.generate_batch as generator
 import legal_instrument.system_path as constant
 
 # param
@@ -14,16 +14,16 @@ label_size = 1
 
 print("reading data from training set...")
 try:
-    with open('../dump_data/xgboost/dump_train_x.txt', 'rb') as f:
+    with open('./dump_data/xgboost/dump_train_x.txt', 'rb') as f:
         train_data_x = pickle.load(f)
 
-    with open('../dump_data/xgboost/dump_train_y_label.txt', 'rb') as f:
+    with open('./dump_data/xgboost/dump_train_y_label.txt', 'rb') as f:
         train_data_y = pickle.load(f)
 
-    with open('../dump_data/xgboost/dump_valid_x.txt', 'rb') as f:
+    with open('./dump_data/xgboost/dump_valid_x.txt', 'rb') as f:
         valid_data_x = pickle.load(f)
 
-    with open('../dump_data/xgboost/dump_valid_y_label.txt', 'rb') as f:
+    with open('./dump_data/xgboost/dump_valid_y_label.txt', 'rb') as f:
         valid_data_y = pickle.load(f)
 except:
     print("No dump file read original file! Please wait... "
@@ -64,7 +64,7 @@ clf.fit(train_data_x, train_data_y,
         eval_set=[(train_data_x_for_validate, train_data_y_for_validate),
                   (valid_data_x, valid_data_y)], eval_metric='merror', verbose=True)
 
-clf.get_booster().save_model('../xgboost_model/1.model')
+clf.get_booster().save_model('./xgboost_model/1.model')
 
 evals_result = clf.evals_result()
 

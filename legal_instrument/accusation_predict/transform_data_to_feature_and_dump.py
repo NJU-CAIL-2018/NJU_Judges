@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 
-import legal_instrument.accusation_predict.generate_batch as generator
+import legal_instrument.data_util.generate_batch as generator
 import legal_instrument.system_path as constant
 
 
@@ -79,4 +79,4 @@ def dump_data_for_xgboost():
     print("dump complete!")
 
 dump_data_for_nn()
-dump_data_for_xgboost()
+#dump_data_for_xgboost()

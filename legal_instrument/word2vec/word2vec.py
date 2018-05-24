@@ -33,7 +33,7 @@ data_index = 0
 def get_fact():
     # 读取停用词
     stop_words = []
-    with open('./dump_data/word_vector/stop_words.txt', "r", encoding="UTF-8") as f:
+    with open('../dump_data/word_vector/stop_words.txt', "r", encoding="UTF-8") as f:
         line = f.readline()
         while line:
             stop_words.append(line[:-1])
@@ -219,11 +219,11 @@ with tf.Session(graph=graph) as session:
                 print(log_str)
     final_embeddings = normalized_embeddings.eval()
 
-    f = open('./dump_data/word_vector/dump_embedding.txt', 'wb')
+    f = open('../dump_data/word_vector/dump_embedding.txt', 'wb')
     pickle.dump(final_embeddings, f)
     f.close()
 
-    f = open('./dump_data/word_vector/dump_dict.txt', 'wb')
+    f = open('../dump_data/word_vector/dump_dict.txt', 'wb')
     pickle.dump(dictionary, f)
     f.close()
 

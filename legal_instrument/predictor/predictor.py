@@ -85,14 +85,17 @@ class Predictor:
         return res
 
 
+import legal_instrument.system_path as constant
+
 p = Predictor()
-with open("/Users/SilverNarcissus/Documents/法院文书/NJU_Judges/legal_instrument/judge/truth.txt", "r",
+with open(constant.DATA_TEST, "r",
           encoding="UTF-8") as f:
     line = f.readline()
     out_file = open('/Users/SilverNarcissus/Documents/法院文书/NJU_Judges/legal_instrument/judge/output.txt', 'w')
     while line:
         obj = json.loads(line)
         s = str(p.predict([obj['fact']])[0]) + "\n"
+        #print(s.replace('\'', '\"'))
         out_file.write(s.replace('\'', '\"'))
         line = f.readline()
 print("out")

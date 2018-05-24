@@ -1,3 +1,2 @@
 model_checkpoint_path: "base_line-99000"
-all_model_checkpoint_paths: "base_line-98000"
 all_model_checkpoint_paths: "base_line-99000"

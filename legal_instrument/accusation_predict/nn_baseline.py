@@ -1,8 +1,9 @@
 # This model is a base line model using neural network
 import pickle
 
-import legal_instrument.generate_batch as generator
 import tensorflow as tf
+
+import legal_instrument.accusation_predict.generate_batch as generator
 import legal_instrument.system_path as constant
 
 # param
@@ -15,16 +16,16 @@ iteration = 100000
 
 print("reading data from training set...")
 try:
-    with open('./dump_data/nn/dump_train_x.txt', 'rb') as f:
+    with open('../dump_data/nn/dump_train_x.txt', 'rb') as f:
         train_data_x = pickle.load(f)
 
-    with open('./dump_data/nn/dump_train_y_label.txt', 'rb') as f:
+    with open('../dump_data/nn/dump_train_y_label.txt', 'rb') as f:
         train_data_y = pickle.load(f)
 
-    with open('./dump_data/nn/dump_valid_x.txt', 'rb') as f:
+    with open('../dump_data/nn/dump_valid_x.txt', 'rb') as f:
         valid_data_x = pickle.load(f)
 
-    with open('./dump_data/nn/dump_valid_y_label.txt', 'rb') as f:
+    with open('../dump_data/nn/dump_valid_y_label.txt', 'rb') as f:
         valid_data_y = pickle.load(f)
 except:
     print("No dump file read original file! Please wait... "
@@ -94,14 +95,14 @@ with tf.Session() as sess:
     # 保存参数所用的保存器
     saver = tf.train.Saver(max_to_keep=2)
     # get latest file
-    ckpt = tf.train.get_checkpoint_state('./nn_model')
+    ckpt = tf.train.get_checkpoint_state('../nn_model')
     if ckpt and ckpt.model_checkpoint_path:
         saver.restore(sess, ckpt.model_checkpoint_path)
 
     # 可视化部分
     tf.summary.scalar("loss", loss)
     merged = tf.summary.merge_all()
-    writer = tf.summary.FileWriter("./nn_logs", sess.graph)
+    writer = tf.summary.FileWriter("../nn_logs", sess.graph)
 
     # training part
     for i in range(iteration):
@@ -117,4 +118,4 @@ with tf.Session() as sess:
             print("step %d, training accuracy %g" % (i, train_accuracy))
             print("step %d, valid accuracy %g" % (i, valid_accuracy))
 
-            saver.save(sess, "./nn_model/base_line", global_step=i)
+            saver.save(sess, "../nn_model/base_line", global_step=i)

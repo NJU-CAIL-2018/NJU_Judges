@@ -48,6 +48,8 @@ print(x.shape)
 print("data load complete")
 print("The model begin here")
 
+print(len(train_data_y[0]))
+exit(0)
 
 # 增加一层神经网络的抽象函数
 def add_layer(layerName, inputs, in_size, out_size, activation_function=None):

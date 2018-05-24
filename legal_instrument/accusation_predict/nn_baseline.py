@@ -2,6 +2,7 @@
 import pickle
 
 import tensorflow as tf
+import sklearn as sk
 
 import legal_instrument.accusation_predict.generate_batch as generator
 import legal_instrument.system_path as constant
@@ -85,7 +86,9 @@ loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(labels=ys, logits=p
 train_step = tf.train.AdamOptimizer().minimize(loss)
 
 # 评价部分
-correct_prediction = tf.equal(tf.argmax(prediction, 1), tf.argmax(ys, 1))
+y_label = tf.argmax(prediction, 1)
+y_true = tf.argmax(ys, 1)
+correct_prediction = tf.equal(y_label, y_true)
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 # run part
@@ -117,5 +120,8 @@ with tf.Session() as sess:
             valid_accuracy = sess.run(accuracy, feed_dict={xs: valid_x, ys: valid_y})
             print("step %d, training accuracy %g" % (i, train_accuracy))
             print("step %d, valid accuracy %g" % (i, valid_accuracy))
+
+            y_label, y_true = sess.run([y_label, y_true],  feed_dict={xs: valid_x, ys: valid_y})
+            print("f1_score", sk.metrics.f1_score(y_true, y_true))
 
             saver.save(sess, "../nn_model/base_line", global_step=i)

@@ -27,3 +27,7 @@ legal_instrument/dump_data/nn/dump_train_y_label.txt
 legal_instrument/dump_data/nn/dump_train_x.txt
 legal_instrument/word2vec/tsne.png
 legal_instrument/data_util/__pycache__/generate_batch.cpython-36.pyc
+legal_instrument/accusation_predict/dump_data/nn/dump_valid_x.txt
+legal_instrument/accusation_predict/dump_data/nn/dump_train_y_label.txt
+legal_instrument/accusation_predict/dump_data/nn/dump_train_x.txt
+legal_instrument/accusation_predict/dump_data/nn/dump_valid_y_label.txt

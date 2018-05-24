@@ -9,7 +9,7 @@ import legal_instrument.system_path as constant
 
 # param
 training_batch_size = 128
-valid_batch_size = 1024
+valid_batch_size = 4096
 embedding_size = 128
 iteration = 100000
 ##
@@ -90,6 +90,7 @@ y_label = tf.argmax(prediction, 1)
 y_true = tf.argmax(ys, 1)
 correct_prediction = tf.equal(y_label, y_true)
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+_, index = tf.nn.top_k(prediction, 1)
 
 # run part
 with tf.Session() as sess:
@@ -121,9 +122,10 @@ with tf.Session() as sess:
             print("step %d, training accuracy %g" % (i, train_accuracy))
             print("step %d, valid accuracy %g" % (i, valid_accuracy))
 
-            y_label, y_true = sess.run([y_label, y_true],  feed_dict={xs: valid_x, ys: valid_y})
-            print(y_label)
-            print("f1_score", sk.metrics.f1_score(y_label, y_true, average = "weighted"))
-            exit(0)
+            y_label_result, y_true_result, _index = sess.run([y_label, y_true, index], feed_dict={xs: valid_x, ys: valid_y})
+            print("f1_score", sk.metrics.f1_score(y_label_result, y_true_result, average = "weighted"))
+            #exit(0)
+            #print(y_label)
+            #print(_index)
 
             saver.save(sess, "./nn_model/base_line", global_step=i)

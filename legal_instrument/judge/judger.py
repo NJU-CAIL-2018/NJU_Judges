@@ -9,14 +9,14 @@ class Judger:
     def __init__(self, accusation_path, law_path):
         self.accu_dic = {}
 
-        f = open(accusation_path, "r")
+        f = open(accusation_path, "r", encoding='utf-8')
         self.task1_cnt = 0
         for line in f:
             self.task1_cnt += 1
             self.accu_dic[line[:-1]] = self.task1_cnt
 
         self.law_dic = {}
-        f = open(law_path, "r")
+        f = open(law_path, "r", encoding='utf-8')
         self.task2_cnt = 0
         for line in f:
             self.task2_cnt += 1
@@ -190,8 +190,8 @@ class Judger:
             result[1].append({"TP": 0, "FP": 0, "TN": 0, "FN": 0})
         result[2] = {"cnt": 0, "score": 0}
 
-        inf = open(truth_path, "r")
-        ouf = open(output_path, "r")
+        inf = open(truth_path, "r", encoding='utf-8')
+        ouf = open(output_path, "r", encoding='utf-8')
 
         for line in inf:
             ground_truth = json.loads(line)["meta"]

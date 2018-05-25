@@ -64,7 +64,7 @@ def change_fact_to_vector(fact, embedding, dictionary):
 # label : 数据列，one-hot编码之后非零的列
 # max : 总类数
 def change_label_to_one_hot(label, max):
-    result = np.zeros([max])
+    result = np.zeros([max + 1])
     for i in label:
         result[i] = 1
 
@@ -140,8 +140,9 @@ def read_data_in_imprisonment_format(file_name, embedding, dictionary):
 
     return result_x, result_y
 
+
 # we can only assmue one_hot is true because we are dealing the multi-label
-def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict, one_hot=True):
+def read_data_in_accu_format(file_name, embedding, dictionary, accu_dict, one_hot=True):
     data = []
     # control data size
     i = 0
@@ -152,7 +153,7 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line and i < 2000:
+        while line:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['accusation']
@@ -166,15 +167,14 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
 
             if i % 1000 == 0:
                 print("read ", i, "lines")
-                print(accu_size)
             line = f.readline()
 
     result_x = np.ndarray([len(data_x), embedding_size])
     if one_hot:
-        result_y = np.ndarray([len(data_y), accu_size])
+        result_y = np.ndarray([len(data_y), len(accu_dict) + 1])
         for i in range(len(data_x)):
             result_x[i] = data_x[i]
-            result_y[i] = change_label_to_one_hot(data_y[i], accu_size)
+            result_y[i] = change_label_to_one_hot(data_y[i], len(accu_dict))
 
     else:
         result_y = np.ndarray([len(data_y)])
@@ -202,10 +202,5 @@ def generate_batch(batch_size, data_x, data_y):
 
     return x, y
 
-accu_dict, reverse_accu_dict = read_accu()
-word_dict, embedding, reverse_dictionary = get_dictionary_and_embedding()
-print("reading data from training set...")
-train_data_x, train_data_y = read_data_in_accu_format(constant.DATA_TRAIN, len(accu_dict) + 1, embedding,
-                                                                word_dict, accu_dict, one_hot=True)
-
-print(train_data_y)
+a, b = read_accu()
+print(len(a))

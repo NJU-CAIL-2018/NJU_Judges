@@ -11,9 +11,9 @@ def dump_data_for_nn():
     word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
 
     print("reading data from training set...")
-    train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, len(accu_dict) + 1, embedding,
+    train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, embedding,
                                                                     word_dict, accu_dict, one_hot=True)
-    valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, len(accu_dict) + 1, embedding,
+    valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, embedding,
                                                                     word_dict, accu_dict, one_hot=True)
     print("reading complete!")
 
@@ -47,9 +47,9 @@ def dump_data_for_xgboost():
     word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
 
     print("reading data from training set...")
-    train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, len(accu_dict) + 1, embedding,
+    train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, embedding,
                                                                     word_dict, accu_dict, one_hot=False)
-    valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, len(accu_dict) + 1, embedding,
+    valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, embedding,
                                                                     word_dict, accu_dict, one_hot=False)
     print("reading complete!")
 

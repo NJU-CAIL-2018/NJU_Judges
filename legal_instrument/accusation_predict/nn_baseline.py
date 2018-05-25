@@ -34,10 +34,10 @@ except:
     accu_dict, reverse_accu_dict = generator.read_accu()
     word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
 
-    train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, len(accu_dict), embedding,
-                                                                    word_dict, accu_dict, one_hot=False)
-    valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, len(accu_dict), embedding,
-                                                                    word_dict, accu_dict, one_hot=False)
+    train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, embedding,
+                                                                    word_dict, accu_dict, one_hot=True)
+    valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, embedding,
+                                                                    word_dict, accu_dict, one_hot=True)
 
 print("reading complete!")
 
@@ -49,7 +49,7 @@ print("data load complete")
 print("The model begin here")
 
 print(len(train_data_y[0]))
-exit(0)
+
 
 # 增加一层神经网络的抽象函数
 def add_layer(layerName, inputs, in_size, out_size, activation_function=None):
@@ -72,17 +72,17 @@ def add_layer(layerName, inputs, in_size, out_size, activation_function=None):
 xs = tf.placeholder(tf.float32, [None, embedding_size])
 ys = tf.placeholder(tf.float32, [None, len(train_data_y[0])])
 # 添加隐藏层1
-l1 = add_layer("layer1", xs, embedding_size, 512, activation_function=tf.sigmoid)
+l1 = add_layer("layer1", xs, embedding_size, 256, activation_function=tf.sigmoid)
 # 添加隐藏层2
-l2 = add_layer("layer2", l1, 512, 256, activation_function=tf.sigmoid)
+#l2 = add_layer("layer2", l1, 256, 256, activation_function=tf.sigmoid)
 # 添加输出层
-prediction = add_layer("layer3", l2, 256, len(train_data_y[0]), activation_function=tf.nn.softmax)
+prediction = add_layer("layer3", l1, 256, len(train_data_y[0]), activation_function=tf.identity)
 
 # 添加正则项
 regularizer = tf.contrib.layers.l2_regularizer(scale=0.001)
 reg_term = tf.contrib.layers.apply_regularization(regularizer)
 # 损失函数
-loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(labels=ys, logits=prediction)) + reg_term
+loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=ys, logits=prediction)) + reg_term
 
 # 优化器选取
 train_step = tf.train.AdamOptimizer().minimize(loss)
@@ -92,7 +92,6 @@ y_label = tf.argmax(prediction, 1)
 y_true = tf.argmax(ys, 1)
 correct_prediction = tf.equal(y_label, y_true)
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
 
 # run part
 with tf.Session() as sess:
@@ -118,16 +117,19 @@ with tf.Session() as sess:
         writer.add_summary(summary, i)
 
         if i % 1000 == 0:
-            train_accuracy = sess.run(accuracy, feed_dict={xs: x, ys: y})
-            valid_x, valid_y = generator.generate_batch(valid_batch_size, valid_data_x, valid_data_y)
-            valid_accuracy = sess.run(accuracy, feed_dict={xs: valid_x, ys: valid_y})
-            print("step %d, training accuracy %g" % (i, train_accuracy))
-            print("step %d, valid accuracy %g" % (i, valid_accuracy))
+            print("step:", i, "train:", sess.run([loss], feed_dict={xs: x, ys: y}))
 
-            y_label_result, y_true_result, _index = sess.run([y_label, y_true, index], feed_dict={xs: valid_x, ys: valid_y})
-            print("f1_score", sk.metrics.f1_score(y_label_result, y_true_result, average = "weighted"))
-            #exit(0)
-            #print(y_label)
-            #print(_index)
+            # train_accuracy = sess.run(accuracy, feed_dict={xs: x, ys: y})
+            valid_x, valid_y = generator.generate_batch(valid_batch_size, valid_data_x, valid_data_y)
+            print("step:", "valid:", sess.run([loss], feed_dict={xs: valid_data_x, ys: valid_data_y}))
+            # valid_accuracy = sess.run(accuracy, feed_dict={xs: valid_x, ys: valid_y})
+            # print("step %d, training accuracy %g" % (i, train_accuracy))
+            # print("step %d, valid accuracy %g" % (i, valid_accuracy))
+            #
+            # y_label_result, y_true_result = sess.run([y_label, y_true], feed_dict={xs: valid_x, ys: valid_y})
+            # print("f1_score", sk.metrics.f1_score(y_label_result, y_true_result, average = "weighted"))
+            # exit(0)
+            # print(y_label)
+            # print(_index)
 
             saver.save(sess, "./nn_model/base_line", global_step=i)

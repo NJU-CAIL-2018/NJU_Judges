@@ -1,8 +1,9 @@
-import json
 import pickle
 import tensorflow as tf
 import numpy as np
 import jieba
+import sys
+import os
 
 
 class Predictor:
@@ -14,22 +15,6 @@ class Predictor:
         self.dictionary, self.embedding = Predictor.get_dictionary_and_embedding()
         # build model
         self.accu_x, self.accu_value, self.accu_index, self.accu_sess = self.build_accu_nn_mode()
-
-    def build_accu_nn_mode(self):
-        xs = tf.placeholder(tf.float32, [None, self.embedding_size])
-        # 添加隐藏层1
-        l1 = self.add_layer("layer1", xs, self.embedding_size, 256, activation_function=tf.sigmoid)
-        # 添加隐藏层2
-        # l2 = self.add_layer("layer2", l1, 512, 256, activation_function=tf.sigmoid)
-        # 添加输出层
-        prediction = self.add_layer("layer3", l1, 256, self.accu_size, activation_function=tf.nn.softmax)
-        value, index = tf.nn.top_k(prediction, 3)
-        accu_sess = tf.Session()
-        saver = tf.train.Saver(max_to_keep=2)
-        ckpt = tf.train.get_checkpoint_state('./accu_nn_model')
-        saver.restore(accu_sess, ckpt.model_checkpoint_path)
-
-        return xs, value, index, accu_sess
 
     def predict(self, content):
         vector = self.change_fact_to_vector(content[0])
@@ -48,13 +33,12 @@ class Predictor:
         value, index = self.accu_sess.run([self.accu_value, self.accu_index], feed_dict={self.accu_x: fact})
         accu = []
         for i, v in enumerate(value[0]):
-            print(v)
             if v >= float(75 / self.accu_size):
                 accu.append(index[0][i])
 
         return accu
 
-    def add_layer(slef, layerName, inputs, in_size, out_size, activation_function=None):
+    def add_layer(self, layerName, inputs, in_size, out_size, activation_function=None):
         # add one more layer and return the output of this layer
         with tf.variable_scope(layerName, reuse=None):
             Weights = tf.get_variable("weights", shape=[in_size, out_size],
@@ -72,9 +56,11 @@ class Predictor:
 
     @staticmethod
     def get_dictionary_and_embedding():
-        with open("./word2vec/dump_embedding.txt", "rb") as f:
+        cur_path = os.path.dirname(os.path.abspath(sys.argv[0])) + os.path.sep
+
+        with open(cur_path + "word2vec" + os.path.sep + "dump_embedding.txt", "rb") as f:
             embedding = pickle.load(f)
-        with open("./word2vec/dump_dict.txt", "rb") as f:
+        with open(cur_path + "word2vec" + os.path.sep + "dump_dict.txt", "rb") as f:
             word_dictionary = pickle.load(f)
 
         return word_dictionary, embedding
@@ -94,8 +80,26 @@ class Predictor:
         res[0] = result
         return res
 
+    def build_accu_nn_mode(self):
+        cur_path = os.path.dirname(os.path.abspath(sys.argv[0])) + os.path.sep
+
+        xs = tf.placeholder(tf.float32, [None, self.embedding_size])
+        # 添加隐藏层1
+        l1 = self.add_layer("layer1", xs, self.embedding_size, 256, activation_function=tf.sigmoid)
+        # 添加隐藏层2
+        # l2 = self.add_layer("layer2", l1, 512, 256, activation_function=tf.sigmoid)
+        # 添加输出层
+        prediction = self.add_layer("layer3", l1, 256, self.accu_size, activation_function=tf.nn.softmax)
+        value, index = tf.nn.top_k(prediction, 3)
+        accu_sess = tf.Session()
+        saver = tf.train.Saver(max_to_keep=2)
+        ckpt = tf.train.get_checkpoint_state(cur_path + 'accu_nn_model')
+        saver.restore(accu_sess, ckpt.model_checkpoint_path)
+
+        return xs, value, index, accu_sess
 
 import legal_instrument.system_path as constant
+import json
 
 p = Predictor()
 with open(constant.DATA_TEST, "r",

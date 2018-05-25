@@ -8,8 +8,8 @@ import legal_instrument.data_util.generate_batch as generator
 import legal_instrument.system_path as constant
 
 # param
-training_batch_size = 128
-valid_batch_size = 4096
+training_batch_size = 256
+valid_batch_size = 256
 embedding_size = 128
 iteration = 100000
 ##
@@ -72,12 +72,16 @@ def add_layer(layerName, inputs, in_size, out_size, activation_function=None):
 xs = tf.placeholder(tf.float32, [None, embedding_size])
 ys = tf.placeholder(tf.float32, [None, len(train_data_y[0])])
 # 添加隐藏层1
-l1 = add_layer("layer1", xs, embedding_size, 256, activation_function=tf.sigmoid)
+l1 = add_layer("layer1", xs, embedding_size, 64, activation_function=tf.sigmoid)
+# 添加隐藏层2
+# l2 = add_layer("layer2", l1, 256, 256, activation_function=tf.sigmoid)
+keep_prob = tf.placeholder(tf.float32)
+l1_drop = tf.nn.dropout(l1, keep_prob)
 # 添加输出层
-prediction = add_layer("layer2", l1, 256, len(train_data_y[0]), activation_function=tf.identity)
+prediction = add_layer("layer3", l1_drop, 64, len(train_data_y[0]), activation_function=tf.identity)
 
 # 添加正则项
-regularizer = tf.contrib.layers.l2_regularizer(scale=0.001)
+regularizer = tf.contrib.layers.l2_regularizer(scale=0.0)
 reg_term = tf.contrib.layers.apply_regularization(regularizer)
 # 损失函数
 loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=ys, logits=prediction)) + reg_term
@@ -85,36 +89,52 @@ loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=ys, logits=p
 # 优化器选取
 train_step = tf.train.AdamOptimizer().minimize(loss)
 
+# 评价部分
+# y_label = tf.argmax(prediction, 1)
+# y_true = tf.argmax(ys, 1)
+# correct_prediction = tf.equal(y_label, y_true)
+# accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 # run part
 with tf.Session() as sess:
     # 初始化变量
     sess.run(tf.global_variables_initializer())
     # 保存参数所用的保存器
-    saver = tf.train.Saver(max_to_keep=2)
+    saver = tf.train.Saver(max_to_keep=1)
     # get latest file
-    ckpt = tf.train.get_checkpoint_state('./nn_model')
+    ckpt = tf.train.get_checkpoint_state('./xkf_nn_model')
     if ckpt and ckpt.model_checkpoint_path:
         saver.restore(sess, ckpt.model_checkpoint_path)
 
     # 可视化部分
     tf.summary.scalar("loss", loss)
     merged = tf.summary.merge_all()
-    writer = tf.summary.FileWriter("./nn_logs", sess.graph)
+    writer = tf.summary.FileWriter("./xkf_nn_logs", sess.graph)
 
     # training part
     for i in range(iteration):
         x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y)
 
-        _, summary = sess.run([train_step, merged], feed_dict={xs: x, ys: y})
+        if i % 1000 == 0:
+            print("step:", i, "train:", sess.run([loss], feed_dict={xs: x, ys: y, keep_prob: 1}))
+            # train_accuracy = sess.run(accuracy, feed_dict={xs: x, ys: y})
+            valid_x, valid_y = generator.generate_batch(valid_batch_size, train_data_x, train_data_y)
+            print("step:", "valid:", sess.run([loss], feed_dict={xs: valid_x, ys: valid_y, keep_prob: 1}))
+            # valid_accuracy = sess.run(accuracy, feed_dict={xs: valid_x, ys: valid_y})
+            # print("step %d, training accuracy %g" % (i, train_accuracy))
+            # print("step %d, valid accuracy %g" % (i, valid_accuracy))
+            #
+            # y_label_result, y_true_result = sess.run([y_label, y_true], feed_dict={xs: valid_x, ys: valid_y})
+            # print("f1_score", sk.metrics.f1_score(y_label_result, y_true_result, average = "weighted"))
+            # exit(0)
+            # print(y_label)
+            # print(_index)
+
+            saver.save(sess, "./xkf_nn_model/base_line", global_step=i)
+
+
+
+        _, summary = sess.run([train_step, merged], feed_dict={xs: x, ys: y, keep_prob: 1})
         writer.add_summary(summary, i)
 
-        if i % 1000 == 0:
-            print("step:", i, "train:", sess.run([loss], feed_dict={xs: x, ys: y}))
 
-            # train_accuracy = sess.run(accuracy, feed_dict={xs: x, ys: y})
-            valid_x, valid_y = generator.generate_batch(valid_batch_size, valid_data_x, valid_data_y)
-            print("step:", "valid:", sess.run([loss], feed_dict={xs: valid_x, ys: valid_y}))
-
-
-            saver.save(sess, "./nn_model/base_line", global_step=i)

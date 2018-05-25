@@ -188,7 +188,7 @@ def read_data_in_accu_format(file_name, embedding, dictionary, accu_dict, one_ho
 
 
 def generate_batch(batch_size, data_x, data_y):
-    x = np.ndarray([batch_size, embedding_size])
+    x = np.ndarray([batch_size, embedding_size], dtype=float)
     if len(data_y.shape) > 1:
         y = np.ndarray([batch_size, len(data_y[0])], dtype=int)
     else:

@@ -18,11 +18,11 @@ class Predictor:
     def build_accu_nn_mode(self):
         xs = tf.placeholder(tf.float32, [None, self.embedding_size])
         # 添加隐藏层1
-        l1 = self.add_layer("layer1", xs, self.embedding_size, 256, activation_function=tf.sigmoid)
+        l1 = self.add_layer("layer1", xs, self.embedding_size, 64, activation_function=tf.sigmoid)
         # 添加隐藏层2
-        # l2 = self.add_layer("layer2", l1, 512, 256, activation_function=tf.sigmoid)
+        # l2 = self.add_layer("layer2", l1, 256, 256, activation_function=tf.sigmoid)
         # 添加输出层
-        prediction = self.add_layer("layer3", l1, 256, self.accu_size, activation_function=tf.nn.softmax)
+        prediction = self.add_layer("layer3", l1, 64, self.accu_size, activation_function=tf.nn.softmax)
         value, index = tf.nn.top_k(prediction, 3)
         accu_sess = tf.Session()
         saver = tf.train.Saver(max_to_keep=2)
@@ -49,8 +49,10 @@ class Predictor:
         accu = []
         for i, v in enumerate(value[0]):
             print(v)
-            if v >= float(75 / self.accu_size):
+            if v >= float(40 / self.accu_size):
                 accu.append(index[0][i])
+        if len(accu) == 0:
+            accu.append(index[0][0])
 
         return accu
 

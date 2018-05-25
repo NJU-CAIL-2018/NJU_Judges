@@ -76,7 +76,7 @@ l1 = add_layer("layer1", xs, embedding_size, 512, activation_function=tf.sigmoid
 # 添加隐藏层2
 l2 = add_layer("layer2", l1, 512, 256, activation_function=tf.sigmoid)
 # 添加输出层
-prediction = add_layer("layer3", l2, 256, len(train_data_y[0]), activation_function=tf.identity)
+prediction = add_layer("layer3", l2, 256, len(train_data_y[0]), activation_function=tf.nn.softmax)
 
 # 添加正则项
 regularizer = tf.contrib.layers.l2_regularizer(scale=0.001)
@@ -92,7 +92,7 @@ y_label = tf.argmax(prediction, 1)
 y_true = tf.argmax(ys, 1)
 correct_prediction = tf.equal(y_label, y_true)
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-_, index = tf.nn.top_k(prediction, 1)
+
 
 # run part
 with tf.Session() as sess:

@@ -205,6 +205,6 @@ class Judger:
 
 j = Judger(constant.ACCU_FILE, constant.LAW_FILE)
 result = j.test(constant.DATA_TEST,
-       '/Users/SilverNarcissus/Documents/法院文书/NJU_Judges/legal_instrument/judge/output.txt')
+       './output.txt')
 
 print(j.get_score(result))

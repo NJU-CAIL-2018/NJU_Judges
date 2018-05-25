@@ -7,7 +7,6 @@ import pickle
 import numpy as np
 import datetime
 
-
 # param
 embedding_size = 128
 num_sampled = 64
@@ -32,7 +31,8 @@ def read_accu():
     with open(constant.ACCU_FILE, "r", encoding="UTF-8") as f:
         line = f.readline()
         while line:
-            accu_dict[line.strip()] = len(accu_dict) + 1
+            if len(line) > 0:
+                accu_dict[line.strip()] = len(accu_dict) + 1
             line = f.readline()
     reverse_accu_dict = dict(zip(accu_dict.values(), accu_dict.keys()))
 
@@ -64,7 +64,11 @@ def change_fact_to_vector(fact, embedding, dictionary):
 # label : 数据列，one-hot编码之后非零的列
 # max : 总类数
 def change_label_to_one_hot(label, max):
-    return np.eye(max)[label]
+    result = np.zeros([max])
+    for i in label:
+        result[i] = 1
+
+    return result
 
 
 # read file into memory
@@ -136,8 +140,8 @@ def read_data_in_imprisonment_format(file_name, embedding, dictionary):
 
     return result_x, result_y
 
-
-def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict, one_hot = True):
+# we can only assmue one_hot is true because we are dealing the multi-label
+def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict, one_hot=True):
     data = []
     # control data size
     i = 0
@@ -148,18 +152,21 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line:
+        while line and i < 2000:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['accusation']
 
-            for index, accusation in enumerate(l):
-                if accusation in accu_dict:
-                    data_x.append(change_fact_to_vector(obj['fact'], embedding, dictionary))
-                    data_y.append(accu_dict[accusation])
+            accu_y = []
+            for accusation in l:
+                accu_y.append(accu_dict[accusation])
+
+            data_x.append(change_fact_to_vector(obj['fact'], embedding, dictionary))
+            data_y.append(accu_y)
 
             if i % 1000 == 0:
                 print("read ", i, "lines")
+                print(accu_size)
             line = f.readline()
 
     result_x = np.ndarray([len(data_x), embedding_size])
@@ -173,7 +180,7 @@ def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_d
         result_y = np.ndarray([len(data_y)])
         for i in range(len(data_x)):
             result_x[i] = data_x[i]
-            result_y[i] = data_y[i]
+            result_y[i] = data_y[i][0]
 
     print(datetime.datetime.now() - time)
 
@@ -186,7 +193,7 @@ def generate_batch(batch_size, data_x, data_y):
         y = np.ndarray([batch_size, len(data_y[0])], dtype=int)
     else:
         y = np.ndarray([batch_size], dtype=int)
-    #print(len(data_y[0]))
+    # print(len(data_y[0]))
 
     for i in range(batch_size):
         index = random.randint(0, len(data_x) - 1)
@@ -194,3 +201,11 @@ def generate_batch(batch_size, data_x, data_y):
         y[i] = data_y[index]
 
     return x, y
+
+accu_dict, reverse_accu_dict = read_accu()
+word_dict, embedding, reverse_dictionary = get_dictionary_and_embedding()
+print("reading data from training set...")
+train_data_x, train_data_y = read_data_in_accu_format(constant.DATA_TRAIN, len(accu_dict) + 1, embedding,
+                                                                word_dict, accu_dict, one_hot=True)
+
+print(train_data_y)

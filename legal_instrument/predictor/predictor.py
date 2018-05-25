@@ -13,7 +13,7 @@ class Predictor:
 
         self.dictionary, self.embedding = Predictor.get_dictionary_and_embedding()
         # build model
-        self.accu_x, self.accu_predict, self.accu_sess = self.build_accu_nn_mode()
+        self.accu_x, self.accu_value, self.accu_index, self.accu_sess = self.build_accu_nn_mode()
 
     def build_accu_nn_mode(self):
         xs = tf.placeholder(tf.float32, [None, self.embedding_size])
@@ -23,26 +23,33 @@ class Predictor:
         l2 = self.add_layer("layer2", l1, 512, 256, activation_function=tf.sigmoid)
         # 添加输出层
         prediction = self.add_layer("layer3", l2, 256, self.accu_size, activation_function=tf.identity)
-        y_predict = tf.argmax(prediction, 1)
+        value, index = tf.nn.top_k(prediction, 3)
         accu_sess = tf.Session()
         saver = tf.train.Saver(max_to_keep=2)
         ckpt = tf.train.get_checkpoint_state('./accu_nn_model')
         saver.restore(accu_sess, ckpt.model_checkpoint_path)
 
-        return xs, y_predict, accu_sess
+        return xs, value, index, accu_sess
 
     def predict(self, content):
         vector = self.change_fact_to_vector(content[0])
 
         result = []
         for a in range(0, len(content)):
-            accu = self.accu_sess.run([self.accu_predict], feed_dict={self.accu_x: vector})
             result.append({
-                "accusation": [accu[0][0]],
+                "accusation": self.get_accu(vector),
                 "imprisonment": 5,
                 "articles": [5, 7, 9]
             })
         return result
+
+    # get the result of accusation
+    def get_accu(self, fact):
+        value, index = self.accu_sess.run([self.accu_value, self.accu_index], feed_dict={self.accu_x: fact})
+        accu = []
+        for i, v in enumerate(value[0]):
+            if v >= 1 / self.accu_size:
+                accu.append(index[0][i])
 
     def add_layer(slef, layerName, inputs, in_size, out_size, activation_function=None):
         # add one more layer and return the output of this layer

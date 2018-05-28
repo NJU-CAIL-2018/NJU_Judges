@@ -2,19 +2,17 @@ import pickle
 import tensorflow as tf
 import numpy as np
 import jieba
-import sys
-import os
+
+from .model_class import AccusationNN
 
 
 class Predictor:
     def __init__(self):
         self.batch_size = 1
         self.embedding_size = 128
-        self.accu_size = 203
-
+        self.accu_model = AccusationNN()
         self.dictionary, self.embedding = Predictor.get_dictionary_and_embedding()
-        # build model
-        self.accu_x, self.accu_value, self.accu_index, self.accu_sess = self.build_accu_nn_mode()
+        self.accu_sess = self.load_model()
 
     def predict(self, content):
         vector = self.change_fact_to_vector(content[0])
@@ -30,37 +28,20 @@ class Predictor:
 
     # get the result of accusation
     def get_accu(self, fact):
-        value, index = self.accu_sess.run([self.accu_value, self.accu_index], feed_dict={self.accu_x: fact})
+        value, index = self.accu_sess.run([self.accu_model.result_value, self.accu_model.result_index],
+                                          feed_dict={self.accu_model.x: fact, self.accu_model.keep_prob: 1.0})
         accu = []
         for i, v in enumerate(value[0]):
-            if v >= float(75 / self.accu_size):
+            if v >= float(50 / self.accu_model.output_size):
                 accu.append(index[0][i])
 
         return accu
 
-    def add_layer(self, layerName, inputs, in_size, out_size, activation_function=None):
-        # add one more layer and return the output of this layer
-        with tf.variable_scope(layerName, reuse=None):
-            Weights = tf.get_variable("weights", shape=[in_size, out_size],
-                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
-            biases = tf.get_variable("biases", shape=[1, out_size],
-                                     initializer=tf.truncated_normal_initializer(stddev=0.1))
-
-        Wx_plus_b = tf.matmul(inputs, Weights) + biases
-        tf.add_to_collection(tf.GraphKeys.WEIGHTS, Weights)
-        if activation_function is None:
-            outputs = Wx_plus_b
-        else:
-            outputs = activation_function(Wx_plus_b)
-        return outputs
-
     @staticmethod
     def get_dictionary_and_embedding():
-        cur_path = os.path.dirname(os.path.abspath(sys.argv[0])) + os.path.sep
-
-        with open(cur_path + "word2vec" + os.path.sep + "dump_embedding.txt", "rb") as f:
+        with open("predictor/word2vec/dump_embedding.txt", "rb") as f:
             embedding = pickle.load(f)
-        with open(cur_path + "word2vec" + os.path.sep + "dump_dict.txt", "rb") as f:
+        with open("predictor/word2vec/dump_dict.txt", "rb") as f:
             word_dictionary = pickle.load(f)
 
         return word_dictionary, embedding
@@ -80,36 +61,12 @@ class Predictor:
         res[0] = result
         return res
 
-    def build_accu_nn_mode(self):
-        cur_path = os.path.dirname(os.path.abspath(sys.argv[0])) + os.path.sep
+    def load_model(self):
+        with self.accu_model.graph.as_default():
+            accu_sess = tf.Session(graph=self.accu_model.graph)
+            accu_sess.run(tf.global_variables_initializer())
+            saver = tf.train.Saver(max_to_keep=1)
+            ckpt = tf.train.get_checkpoint_state('predictor/accu_nn_model')
+            saver.restore(accu_sess, ckpt.model_checkpoint_path)
 
-        xs = tf.placeholder(tf.float32, [None, self.embedding_size])
-        # 添加隐藏层1
-        l1 = self.add_layer("layer1", xs, self.embedding_size, 256, activation_function=tf.sigmoid)
-        # 添加隐藏层2
-        # l2 = self.add_layer("layer2", l1, 512, 256, activation_function=tf.sigmoid)
-        # 添加输出层
-        prediction = self.add_layer("layer3", l1, 256, self.accu_size, activation_function=tf.nn.softmax)
-        value, index = tf.nn.top_k(prediction, 3)
-        accu_sess = tf.Session()
-        saver = tf.train.Saver(max_to_keep=2)
-        ckpt = tf.train.get_checkpoint_state(cur_path + 'accu_nn_model')
-        saver.restore(accu_sess, ckpt.model_checkpoint_path)
-
-        return xs, value, index, accu_sess
-
-import legal_instrument.system_path as constant
-import json
-
-p = Predictor()
-with open(constant.DATA_TEST, "r",
-          encoding="UTF-8") as f:
-    line = f.readline()
-    out_file = open('../judge/output.txt', 'w', )
-    while line:
-        obj = json.loads(line)
-        s = str(p.predict([obj['fact']])[0]) + "\n"
-        print(s.replace('\'', '\"'))
-        out_file.write(s.replace('\'', '\"'))
-        line = f.readline()
-print("out")
+        return accu_sess

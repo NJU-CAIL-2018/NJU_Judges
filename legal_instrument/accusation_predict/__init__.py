@@ -1,0 +1,1 @@
+from .xkf_nn_model import AccusationNN

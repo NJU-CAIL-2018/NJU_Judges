@@ -40,3 +40,9 @@ legal_instrument/accusation_predict/nn_model/base_line-98000.index
 legal_instrument/accusation_predict/nn_model/base_line-98000.data-00000-of-00001
 legal_instrument/accusation_predict/nn_logs/events.out.tfevents.1527219101.SILVERPC
 legal_instrument/accusation_predict/nn_logs/events.out.tfevents.1527217914.SILVERPC
+legal_instrument/accusation_predict/__pycache__/__init__.cpython-35.pyc
+legal_instrument/accusation_predict/__pycache__/xkf_nn_model.cpython-35.pyc
+legal_instrument/predictor/__pycache__/__init__.cpython-35.pyc
+legal_instrument/predictor/__pycache__/predictor.cpython-35.pyc
+legal_instrument/predictor/model_class/__pycache__/__init__.cpython-35.pyc
+legal_instrument/predictor/model_class/__pycache__/accusation_nn_model.cpython-35.pyc

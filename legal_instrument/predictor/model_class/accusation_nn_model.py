@@ -65,10 +65,10 @@ class AccusationNN:
             # 添加隐藏层1
             l1 = self._add_layer("layer1", self.x, self.input_size, 64, activation_function=tf.sigmoid)
             # 添加隐藏层2
-            # l2 = add_layer("layer2", l1, 256, 256, activation_function=tf.sigmoid)
-            l1_drop = tf.nn.dropout(l1, self._keep_prob)
+            l2 = self._add_layer("layer2", l1, 64, 128, activation_function=tf.sigmoid)
+            l2_drop = tf.nn.dropout(l2, self._keep_prob)
             # 添加输出层
-            prediction = self._add_layer("layer3", l1_drop, 64, self.output_size, activation_function=tf.identity)
+            prediction = self._add_layer("layer3", l2_drop, 128, self.output_size, activation_function=tf.identity)
 
         return prediction
 

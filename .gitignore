@@ -40,3 +40,7 @@ legal_instrument/accusation_predict/nn_model/base_line-98000.index
 legal_instrument/accusation_predict/nn_model/base_line-98000.data-00000-of-00001
 legal_instrument/accusation_predict/nn_logs/events.out.tfevents.1527219101.SILVERPC
 legal_instrument/accusation_predict/nn_logs/events.out.tfevents.1527217914.SILVERPC
+legal_instrument/accusation_predict/xkf_nn_model/checkpoint
+legal_instrument/accusation_predict/xkf_nn_model/base_line-99000.meta
+legal_instrument/accusation_predict/xkf_nn_model/base_line-99000.index
+legal_instrument/accusation_predict/xkf_nn_model/base_line-99000.data-00000-of-00001

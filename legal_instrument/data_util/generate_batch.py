@@ -226,7 +226,7 @@ def generate_batch(batch_size, data_x, data_y):
     return x, y
 
 
-word_dict, embedding, reverse_dictionary = get_dictionary_and_embedding()
-a, b = read_data_in_imprisonment_format(constant.DATA_TRAIN, embedding, word_dict)
-print(b)
-print(len(b))
+# word_dict, embedding, reverse_dictionary = get_dictionary_and_embedding()
+# a, b = read_data_in_imprisonment_format(constant.DATA_TRAIN, embedding, word_dict)
+# print(b)
+# print(len(b))

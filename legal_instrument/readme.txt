@@ -8,11 +8,11 @@ dump_data文件夹：用于保存生成的词向量和词典, 模型的输入向
 ——————————————————————————————————————————————————————————————————————————
 
 ——————————————————————————————————————————————————————————————————————————
-nn_logs文件夹：用于保存 tensorflow 训练的可视化文件结果
+nn_logs文件夹 & xkf_nn_logs 文件夹：用于保存 tensorflow 训练的可视化文件结果
 ——————————————————————————————————————————————————————————————————————————
 
 ——————————————————————————————————————————————————————————————————————————
-nn_model文件夹：用于保存 tensorflow 生成的模型。
+nn_model文件夹 & xkf_nn_model 文件夹：用于保存 tensorflow 生成的模型。
 注意：如果要训练新的模型，请务必删除旧模型的存储点，该存储点的作用是迭代，意思就是这次训练到10000次，下次接着这次训练
 ——————————————————————————————————————————————————————————————————————————
 
@@ -29,12 +29,26 @@ nn_baseline文件 : 一个以神经网络作为基线的模型，10000迭代后�
 ——————————————————————————————————————————————————————————————————————————
 
 ——————————————————————————————————————————————————————————————————————————
+xkf_nn_model文件：薛恺丰的基本神经网络模型
+——————————————————————————————————————————————————————————————————————————
+
+——————————————————————————————————————————————————————————————————————————
 transform_data_to_feature_and_dump文件：用于将原始数据文件转化为向量，其中包含两个函数：
 
 1.dump_data_for_xgboost: 为xgboost模型生成输入集和验证集，并将其保存在 dump_data/xgboost 以加速下一次数据读取
 
 2.dump_data_for_nn: 为 nn 模型生成输入集和验证集，并将其保存在 dump_data/nn 以加速下一次数据读取
 ——————————————————————————————————————————————————————————————————————————
+
+##########################################
+#####     article_predict 文件夹       ####
+##########################################
+与上文类似，用来预测法条的模型及数据
+
+##########################################
+#####   imprisonment_predict 文件夹    ####
+##########################################
+与上文类似，用来预测刑期的模型及数据
 
 
 ##########################################
@@ -49,16 +63,20 @@ accu_dict : 罪名 -> index  eg. 故意杀人 ->17
 reverse_accu_dict : index -> 罪名  eg. 17 -> 故意杀人
 
 ##不重要
-2.get_dictionary_and_embedding : 加载词典和词向量，返回值为：
+2.read_article : 生成法条与法条index的map和reverse_map，返回值为：
+article _dict : 法条 -> index
+reverse_article _dict : index -> 法条
+
+##不重要
+3.get_dictionary_and_embedding : 加载词典和词向量，返回值为：
 word_dictionary : 词典  单词 -> index
 embedding : 词向量   index -> vector
 reverse_word_dictionary : 反向词典  index -> 单词
 
 ##比较重要
-3.read_data_in_accu_format : 加载用于罪名预测的数据集
+4.read_data_in_accu_format : 加载用于罪名预测的数据集
 参数：
 file_name : 数据文件名, 如DATA_TRAIN, DATA_VALID
-accu_size : 罪名字典大小
 embedding : 词向量
 dictionary : 词典
 accu_dict : 罪名词典
@@ -66,8 +84,29 @@ accu_dict : 罪名词典
 data_x : 数据集的特征向量
 data_y : 数据集的标签，one_hot形式
 
+##比较重要
+5.read_data_in_article_format : 加载用于法条预测的数据集
+参数：
+file_name : 数据文件名, 如DATA_TRAIN, DATA_VALID
+embedding : 词向量
+dictionary : 词典
+article_dict : 法条词典
+返回值：
+data_x : 数据集的特征向量
+data_y : 数据集的标签，one_hot形式
+
+##比较重要
+6.read_data_in_imprisonment_format : 加载用于法条预测的数据集
+参数：
+file_name : 数据文件名, 如DATA_TRAIN, DATA_VALID
+embedding : 词向量
+dictionary : 词典
+返回值：
+data_x : 数据集的特征向量
+data_y : 数据集的回归结果，表示刑期长短
+
 ##重要
-4.generate_batch ： 依据输入的数据随机选取batch_size个数据生成一个batch
+7.generate_batch ： 依据输入的数据随机选取batch_size个数据生成一个batch
 参数:
 batch_size : 每次生成的数据数量
 data_x : 数据集的特征向量
@@ -76,6 +115,25 @@ label_size : 预测标签分类数量
 返回值:
 x : 特征向量 shape = [batch_size, 词向量长度]
 y : 标签 shape = [batch_size, 预测标签分类数量]
+
+##
+8.change_label_to_one_hot：将label转换为one-hot的形式
+参数：
+label : 数据列，one-hot编码之后非零的列
+max : 总类数
+返回值：
+result：one-hot形式的lebal
+
+##
+9.change_fact_to_vector：将事实文字转换成向量
+参数：
+fact：事实文字
+embedding：词向量
+dictionary：词与词向量对应的词典
+返回值：
+result：事实文字转换成的向量
+
+
 ——————————————————————————————————————————————————————————————————————————
 
 ##########################################

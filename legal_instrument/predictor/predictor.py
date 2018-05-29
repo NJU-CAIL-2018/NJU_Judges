@@ -60,7 +60,7 @@ class Predictor:
         result = self.imprisonment_sess.run(self.imprisonment_model.result,
                                              feed_dict={self.imprisonment_model.x: fact, self.imprisonment_model.keep_prob: 1.0})
 
-        return result[0]
+        return int(result[0][0])
 
     @staticmethod
     def get_dictionary_and_embedding():
@@ -102,7 +102,7 @@ class Predictor:
             saver.restore(article_sess, ckpt.model_checkpoint_path)
 
         with self.imprisonment_model.graph.as_default():
-            imprisonment_sess = tf.Session(graph=self.article_model.graph)
+            imprisonment_sess = tf.Session(graph=self.imprisonment_model.graph)
             imprisonment_sess.run(tf.global_variables_initializer())
             saver = tf.train.Saver(max_to_keep=1)
             ckpt = tf.train.get_checkpoint_state('predictor/imprisonment_nn_model')

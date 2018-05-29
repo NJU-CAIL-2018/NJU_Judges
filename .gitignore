@@ -57,3 +57,15 @@ legal_instrument/predictor/model_class/__pycache__/accusation_nn_model.cpython-3
 legal_instrument/predictor/model_class/__pycache__/__init__.cpython-36.pyc
 legal_instrument/predictor/__pycache__/predictor.cpython-36.pyc
 legal_instrument/predictor/__pycache__/__init__.cpython-36.pyc
+legal_instrument/imprisonment_predict/dump_data/nn/dump_valid_y_label.txt
+legal_instrument/imprisonment_predict/dump_data/nn/dump_valid_x.txt
+legal_instrument/imprisonment_predict/dump_data/nn/dump_train_y_label.txt
+legal_instrument/imprisonment_predict/dump_data/nn/dump_train_x.txt
+legal_instrument/article_predict/xkf_nn_model/nn-99000.meta
+legal_instrument/article_predict/xkf_nn_model/nn-99000.index
+legal_instrument/article_predict/xkf_nn_model/nn-99000.data-00000-of-00001
+legal_instrument/article_predict/xkf_nn_model/checkpoint
+legal_instrument/article_predict/dump_data/nn/dump_valid_y_label.txt
+legal_instrument/article_predict/dump_data/nn/dump_valid_x.txt
+legal_instrument/article_predict/dump_data/nn/dump_train_y_label.txt
+legal_instrument/article_predict/dump_data/nn/dump_train_x.txt

@@ -48,9 +48,6 @@ legal_instrument/accusation_predict/__pycache__/__init__.cpython-35.pyc
 legal_instrument/accusation_predict/__pycache__/xkf_nn_model.cpython-35.pyc
 legal_instrument/predictor/__pycache__/__init__.cpython-35.pyc
 legal_instrument/predictor/__pycache__/predictor.cpython-35.pyc
-legal_instrument/predictor/accu_nn_model/base_line-61000.data-00000-of-00001
-legal_instrument/predictor/accu_nn_model/base_line-61000.index
-legal_instrument/predictor/accu_nn_model/base_line-61000.meta
 legal_instrument/predictor/model_class/__pycache__/__init__.cpython-35.pyc
 legal_instrument/predictor/model_class/__pycache__/accusation_nn_model.cpython-35.pyc
 legal_instrument/predictor/model_class/__pycache__/accusation_nn_model.cpython-36.pyc

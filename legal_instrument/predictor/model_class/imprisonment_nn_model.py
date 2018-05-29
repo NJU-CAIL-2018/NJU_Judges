@@ -9,29 +9,28 @@ class ImprisonmentNN:
         self.valid_batch_size = 256
         self.iteration = 100000
         # embediing size = 128
-        self.input_size = 128
-        # only one
-        self._output_size = 1
+        # accu_size = 203
+        self.input_size = 128 + 203
+        self.output_size = 3
         # 图
         self._graph = tf.Graph()
 
         # 建立模型相关量
         self._x, self._y, self._keep_prob = self.build_placeholder()
-        self.row_prediction = self.build_model()
+        self.is_imprisonment_prediction, self.is_life_imprisonment_prediction, self.imprisonment_prediction = self.build_model()
         # 下面是回归任务代码
         self.loss = self.build_regression()
         self._train_op = self.build_train_op()
         self._result = self.get_one_result()
-        self.accuracy = self.one_result_accuracy()
 
     # 增加一层神经网络的抽象函数
     def _add_layer(self, layerName, inputs, in_size, out_size, activation_function=None):
         # add one more layer and return the output of this layer
         with tf.variable_scope(layerName, reuse=None):
             Weights = tf.get_variable("weights", shape=[in_size, out_size],
-                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
+                                      initializer=tf.truncated_normal_initializer(stddev=0.1), dtype=tf.float32)
             biases = tf.get_variable("biases", shape=[1, out_size],
-                                     initializer=tf.truncated_normal_initializer(stddev=0.1))
+                                     initializer=tf.truncated_normal_initializer(stddev=0.1), dtype=tf.float32)
 
         Wx_plus_b = tf.matmul(inputs, Weights) + biases
         tf.add_to_collection(tf.GraphKeys.WEIGHTS, Weights)
@@ -62,16 +61,23 @@ class ImprisonmentNN:
             l2 = self._add_layer("layer2", l1, 64, 128, activation_function=tf.sigmoid)
             l2_drop = tf.nn.dropout(l2, self._keep_prob)
             # 添加输出层
-            prediction = self._add_layer("layer3", l2_drop, 128, self.output_size, activation_function=tf.identity)
+            is_imprisonment_prediction = self._add_layer("layer3_1", l2_drop, 128, 1, activation_function=tf.identity)
+            is_life_imprisonment_prediction = self._add_layer("layer3_2", l2_drop, 128, 1,
+                                                              activation_function=tf.identity)
+            imprisonment_prediction = self._add_layer("layer3_3", l2_drop, 128, 1, activation_function=tf.identity)
 
-        return prediction
+        return is_imprisonment_prediction, is_life_imprisonment_prediction, imprisonment_prediction
 
     # 建立回归预测的损失函数
     def build_regression(self):
         with self.graph.as_default():
-            mean_square = tf.reduce_mean(tf.square(self.y - self.row_prediction))
+            mean_square_1 = tf.reduce_mean(
+                tf.square(tf.slice(self.y, [0, 0], [-1, 1]) - self.is_imprisonment_prediction))
+            mean_square_2 = tf.reduce_mean(
+                tf.square(tf.slice(self.y, [0, 1], [-1, 1]) - self.is_life_imprisonment_prediction))
+            mean_square_3 = tf.reduce_mean(tf.square(tf.slice(self.y, [0, 2], [-1, 1]) - self.imprisonment_prediction))
             reg_term = self._build_regular_term()
-            loss = mean_square + reg_term
+            loss = mean_square_1 + mean_square_2 + mean_square_3 + reg_term
 
         return loss
 
@@ -80,7 +86,6 @@ class ImprisonmentNN:
             regularizer = tf.contrib.layers.l2_regularizer(scale=0.001)
             reg_term = tf.contrib.layers.apply_regularization(regularizer)
         return reg_term
-
 
     # 建立训练张量
     def build_train_op(self):
@@ -92,17 +97,13 @@ class ImprisonmentNN:
     # 拟合数据集
     def get_one_result(self):
         with self.graph.as_default():
-            result = tf.round(self.row_prediction)
+            print(self.is_imprisonment_prediction)
+            print(self.is_life_imprisonment_prediction)
+            print(self.imprisonment_prediction)
+            result = tf.concat([tf.concat([self.is_imprisonment_prediction, self.is_life_imprisonment_prediction], 0),
+                               self.imprisonment_prediction], 0)
 
         return result
-
-    # 得到回归准确度
-    def one_result_accuracy(self):
-        with self.graph.as_default():
-            accuracy = tf.reduce_mean(tf.square(self.y - self.result))
-
-        return accuracy
-
 
     @property
     def graph(self):
@@ -127,7 +128,3 @@ class ImprisonmentNN:
     @property
     def result(self):
         return self._result
-
-    @property
-    def output_size(self):
-        return self._output_size

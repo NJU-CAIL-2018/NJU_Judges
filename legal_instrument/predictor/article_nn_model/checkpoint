@@ -1,0 +1,2 @@
+model_checkpoint_path: "nn-99000"
+all_model_checkpoint_paths: "nn-99000"

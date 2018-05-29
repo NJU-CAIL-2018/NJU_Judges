@@ -39,6 +39,19 @@ def read_accu():
     return accu_dict, reverse_accu_dict
 
 
+def read_article():
+    article_dict = dict()
+    with open(constant.LAW_FILE, "r", encoding="UTF-8") as f:
+        line = f.readline()
+        while line:
+            if len(line) > 0:
+                article_dict[int(line.strip())] = len(article_dict) + 1
+            line = f.readline()
+    reverse_article_dict = dict(zip(article_dict.values(), article_dict.keys()))
+
+    return article_dict, reverse_article_dict
+
+
 def get_dictionary_and_embedding():
     with open("../dump_data/word_vector/dump_embedding.txt", "rb") as f:
         embedding = pickle.load(f)
@@ -71,42 +84,6 @@ def change_label_to_one_hot(label, max):
     return result
 
 
-# read file into memory
-# this function is slower than below
-# def read_data_in_accu_format(file_name, accu_size, embedding, dictionary, accu_dict, one_hot = True):
-#     data = []
-#     # control data size
-#     i = 0
-#     data_x = np.zeros([1, embedding_size])
-#     if one_hot :
-#         data_y = np.zeros([1, len(accu_dict)])
-#     else:
-#         data_y = np.zeros([1, 1], dtype=int)
-#
-#     time = datetime.datetime.now()
-#
-#     with open(file_name, "r", encoding="UTF-8") as f:
-#         line = f.readline()
-#
-#         while line and i < 10000:
-#             i = i + 1
-#             obj = json.loads(line)
-#             l = obj['meta']['accusation']
-#
-#             for index, accusation in enumerate(l):
-#                 if accusation in accu_dict:
-#                     data_x = np.row_stack((data_x, change_fact_to_vector(obj['fact'], embedding, dictionary)))
-#                     if one_hot:
-#                         data_y = np.row_stack((data_y, change_label_to_one_hot(accu_dict[accusation], accu_size)))
-#                     else:
-#                         data_y = np.row_stack((data_y,accu_dict[accusation]))
-#             if i % 1000 == 0:
-#                 print("read ", i, "lines")
-#             line = f.readline()
-#
-#     print(datetime.datetime.now() - time)
-#
-#     return data_x[1:], data_y[1:]
 def read_data_in_imprisonment_format(file_name, embedding, dictionary):
     data = []
     # control data size
@@ -131,10 +108,10 @@ def read_data_in_imprisonment_format(file_name, embedding, dictionary):
             line = f.readline()
 
     result_x = np.ndarray([len(data_x), embedding_size])
-    result_y = np.ndarray([len(data_y)], dtype='float')
+    result_y = np.ndarray([len(data_y), 1], dtype='float')
     for i in range(len(data_x)):
         result_x[i] = data_x[i]
-        result_y[i] = data_y[i]
+        result_y[i][0] = data_y[i]
 
     print(datetime.datetime.now() - time)
 
@@ -187,6 +164,52 @@ def read_data_in_accu_format(file_name, embedding, dictionary, accu_dict, one_ho
     return result_x, result_y
 
 
+# we can only assmue one_hot is true because we are dealing the multi-label
+def read_data_in_article_format(file_name, embedding, dictionary, article_dict, one_hot=True):
+    data = []
+    # control data size
+    i = 0
+    data_x = []
+    data_y = []
+
+    time = datetime.datetime.now()
+    with open(file_name, "r", encoding="UTF-8") as f:
+        line = f.readline()
+
+        while line:
+            i = i + 1
+            obj = json.loads(line)
+            l = obj['meta']['relevant_articles']
+
+            article_y = []
+            for article in l:
+                article_y.append(article_dict[article])
+
+            data_x.append(change_fact_to_vector(obj['fact'], embedding, dictionary))
+            data_y.append(article_y)
+
+            if i % 1000 == 0:
+                print("read ", i, "lines")
+            line = f.readline()
+
+    result_x = np.ndarray([len(data_x), embedding_size])
+    if one_hot:
+        result_y = np.ndarray([len(data_y), len(article_dict) + 1])
+        for i in range(len(data_x)):
+            result_x[i] = data_x[i]
+            result_y[i] = change_label_to_one_hot(data_y[i], len(article_dict))
+
+    else:
+        result_y = np.ndarray([len(data_y)])
+        for i in range(len(data_x)):
+            result_x[i] = data_x[i]
+            result_y[i] = data_y[i][0]
+
+    print(datetime.datetime.now() - time)
+
+    return result_x, result_y
+
+
 def generate_batch(batch_size, data_x, data_y):
     x = np.ndarray([batch_size, embedding_size], dtype=float)
     if len(data_y.shape) > 1:
@@ -202,5 +225,8 @@ def generate_batch(batch_size, data_x, data_y):
 
     return x, y
 
-a, b = read_accu()
-print(len(a))
+
+word_dict, embedding, reverse_dictionary = get_dictionary_and_embedding()
+a, b = read_data_in_imprisonment_format(constant.DATA_TRAIN, embedding, word_dict)
+print(b)
+print(len(b))

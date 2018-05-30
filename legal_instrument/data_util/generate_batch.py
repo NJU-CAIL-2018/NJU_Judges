@@ -84,7 +84,7 @@ def change_label_to_one_hot(label, max):
     return result
 
 
-def read_data_in_imprisonment_format(file_name, embedding, dictionary):
+def read_data_in_imprisonment_format(file_name, embedding, dictionary, accu_dict):
     data = []
     # control data size
     i = 0
@@ -98,20 +98,41 @@ def read_data_in_imprisonment_format(file_name, embedding, dictionary):
         while line:
             i = i + 1
             obj = json.loads(line)
-            l = obj['meta']['term_of_imprisonment']['imprisonment']
+            accusation = obj['meta']['accusation']
+            imprisonment = obj['meta']['term_of_imprisonment']['imprisonment']
+            death_penalty = obj['meta']['term_of_imprisonment']['death_penalty']
+            life_imprisonment = obj['meta']['term_of_imprisonment']['life_imprisonment']
+            cur_y = []
 
-            data_x.append(change_fact_to_vector(obj['fact'], embedding, dictionary))
-            data_y.append(l)
+            accu = []
+            for accusation in accusation:
+                accu.append(accu_dict[accusation])
+
+            if death_penalty:
+                cur_y.append(1)
+                cur_y.append(-1)
+            elif life_imprisonment:
+                cur_y.append(1)
+                cur_y.append(1)
+            else:
+                cur_y.append(-1)
+                cur_y.append(0)
+
+            cur_y.append(imprisonment)
+            data_x.append(np.concatenate((change_fact_to_vector(obj['fact'], embedding, dictionary), change_label_to_one_hot(accu, len(accu_dict)))))
+            data_y.append(cur_y)
 
             if i % 1000 == 0:
                 print("read ", i, "lines")
             line = f.readline()
 
-    result_x = np.ndarray([len(data_x), embedding_size])
-    result_y = np.ndarray([len(data_y), 1], dtype='float')
+    result_x = np.ndarray([len(data_x), embedding_size + len(accu_dict) + 1])
+    result_y = np.ndarray([len(data_y), 3], dtype='float')
     for i in range(len(data_x)):
         result_x[i] = data_x[i]
-        result_y[i][0] = data_y[i]
+        result_y[i][0] = data_y[i][0]
+        result_y[i][1] = data_y[i][1]
+        result_y[i][2] = data_y[i][2]
 
     print(datetime.datetime.now() - time)
 
@@ -166,7 +187,6 @@ def read_data_in_accu_format(file_name, embedding, dictionary, accu_dict, one_ho
 
 # we can only assmue one_hot is true because we are dealing the multi-label
 def read_data_in_article_format(file_name, embedding, dictionary, article_dict, one_hot=True):
-    data = []
     # control data size
     i = 0
     data_x = []
@@ -211,7 +231,7 @@ def read_data_in_article_format(file_name, embedding, dictionary, article_dict, 
 
 
 def generate_batch(batch_size, data_x, data_y):
-    x = np.ndarray([batch_size, embedding_size], dtype=float)
+    x = np.ndarray([batch_size, len(data_x[0])], dtype=float)
     if len(data_y.shape) > 1:
         y = np.ndarray([batch_size, len(data_y[0])], dtype=int)
     else:
@@ -226,7 +246,8 @@ def generate_batch(batch_size, data_x, data_y):
     return x, y
 
 
-word_dict, embedding, reverse_dictionary = get_dictionary_and_embedding()
-a, b = read_data_in_imprisonment_format(constant.DATA_TRAIN, embedding, word_dict)
-print(b)
-print(len(b))
+# word_dict, embedding, reverse_dictionary = get_dictionary_and_embedding()
+# accu_dict, reverse_accu_dict = read_accu()
+# a, b = read_data_in_imprisonment_format(constant.DATA_TRAIN, embedding, word_dict, accu_dict)
+# print(a)
+# print(len(a[0]))

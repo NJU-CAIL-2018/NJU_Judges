@@ -195,13 +195,15 @@ try:
 except:
     print("No dump file read original file! Please wait... "
           "If u want to accelerate this process, please see read_me -> transform_data_to_feature_and_dump")
-    accu_dict, reverse_accu_dict = generator.read_accu()
+    article_dict, reverse_article_dict = generator.read_article()
     word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
 
-    train_data_x, train_data_y = generator.read_data_in_accu_format(constant.DATA_TRAIN, embedding,
-                                                                    word_dict, accu_dict, one_hot=True)
-    valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, embedding,
-                                                                    word_dict, accu_dict, one_hot=True)
+    print("reading data from training set...")
+    train_data_x, train_data_y = generator.read_data_in_article_format(constant.DATA_TRAIN, embedding,
+                                                                       word_dict, article_dict, one_hot=True)
+    valid_data_x, valid_data_y = generator.read_data_in_article_format(constant.DATA_VALID, embedding,
+                                                                       word_dict, article_dict, one_hot=True)
+
 
 print("reading complete!")
 

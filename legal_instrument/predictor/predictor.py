@@ -12,6 +12,7 @@ class Predictor:
     def __init__(self):
         self.batch_size = 1
         self.embedding_size = 128
+        self.accu_size = 202
         # 建立三个模型
         self.accu_model = AccusationNN()
         self.article_model = ArticleNN()
@@ -57,10 +58,23 @@ class Predictor:
 
     # get the result of imprisonment
     def get_imprisonment(self, fact):
+        #print(fact)
+        accu_input = np.ndarray([1, self.accu_size + 1])
+        accu_input[0] = self.change_label_to_one_hot(self.get_accu(fact))
+        input = np.concatenate((fact, accu_input), 1)
         result = self.imprisonment_sess.run(self.imprisonment_model.result,
-                                             feed_dict={self.imprisonment_model.x: fact, self.imprisonment_model.keep_prob: 1.0})
+                                             feed_dict={self.imprisonment_model.x: input, self.imprisonment_model.keep_prob: 1.0})
 
-        return result[0]
+        #print(result)
+        if(result[0][0] < 0):
+            if(result[2][0] <= 0):
+                return 5
+            return int(result[2][0])
+        else:
+            if result[1][0] >= 0:
+                return -1
+
+        return -2
 
     @staticmethod
     def get_dictionary_and_embedding():
@@ -70,6 +84,15 @@ class Predictor:
             word_dictionary = pickle.load(f)
 
         return word_dictionary, embedding
+
+    # label : 数据列，one-hot编码之后非零的列
+    # max : 总类数
+    def change_label_to_one_hot(self, label):
+        result = np.zeros([self.accu_size + 1])
+        for i in label:
+            result[i] = 1
+
+        return result
 
     def change_fact_to_vector(self, fact):
         result = np.zeros(self.embedding_size)
@@ -102,7 +125,7 @@ class Predictor:
             saver.restore(article_sess, ckpt.model_checkpoint_path)
 
         with self.imprisonment_model.graph.as_default():
-            imprisonment_sess = tf.Session(graph=self.article_model.graph)
+            imprisonment_sess = tf.Session(graph=self.imprisonment_model.graph)
             imprisonment_sess.run(tf.global_variables_initializer())
             saver = tf.train.Saver(max_to_keep=1)
             ckpt = tf.train.get_checkpoint_state('predictor/imprisonment_nn_model')

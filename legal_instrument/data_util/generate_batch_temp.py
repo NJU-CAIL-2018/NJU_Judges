@@ -67,7 +67,7 @@ def read_data_in_imprisonment_format(file_name, embedding, row_size, dictionary,
 
             data_list = change_fact_to_matrices(obj['fact'], embedding, row_size, dictionary)
             for data in data_list:
-                data_x.append(np.concatenate((data, change_label_to_one_hot(accu, len(accu_dict)))))
+                data_x.append(np.vstack((data, change_label_to_n_hot(accu, len(accu_dict)))))
                 data_y.append(cur_y)
 
             if i % 1000 == 0:
@@ -192,7 +192,21 @@ def change_label_to_one_hot(label, max):
     return result
 
 
+def change_label_to_n_hot(label, max):
+    vector = change_label_to_one_hot(label, max)
+    result = np.zeros(shape=(2, embedding_size))
+    result[0] = vector[:embedding_size]
+    for i in range(0, embedding_size):
+        if i + embedding_size < len(vector):
+            result[1][i] = vector[i + embedding_size]
+        else:
+            result[1][i] = 0
+
+    return result
+
+
 word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
-data_x = change_fact_to_matrices("公诉机关指控：2016年3月28日20时许，被告人颜某在本市洪山区马湖新村足球场马路边捡拾到被害人谢某的VIVOX5手机一部", embedding, 10,
-                                 word_dict)
+data_x = change_fact_to_matrices(
+    "公诉机关指控：2016年3月28日20时许，被告人颜某在本市洪山区马湖新村足球场马路边捡拾到被害人谢某的VIVOX5手机一部",
+    embedding, 10, word_dict)
 print(data_x)

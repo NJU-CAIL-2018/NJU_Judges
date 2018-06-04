@@ -3,11 +3,13 @@ import json
 import jieba
 import legal_instrument.data_util.generate_batch as generator
 import datetime
+import legal_instrument.system_path as constant
 
 # param
 embedding_size = 128
 
 
+# data_X shape = [-1, embedding_size * row_size]
 def change_fact_to_matrices(fact, embedding, row_size, dictionary):
     result = np.zeros(shape=(row_size, embedding_size))
     data_x = []
@@ -17,18 +19,19 @@ def change_fact_to_matrices(fact, embedding, row_size, dictionary):
             row = 0
             matrix = result.copy()
             data_x.append(matrix)
-            result = np.zeros(shape=(embedding_size, row_size))
+            result = np.zeros(shape=(row_size, embedding_size))
         if word in dictionary and row < row_size:
             result[row] = embedding[dictionary[word]]
             row += 1
     matrix = result.copy()
-    while row < 10:
+    while row < row_size:
         result[row] = np.zeros(embedding_size)
         row += 1
     data_x.append(matrix)
     return data_x
 
 
+# data_X shape = [-1, embedding_size * (row_size + 2)]
 def read_data_in_imprisonment_format(file_name, embedding, row_size, dictionary, accu_dict):
     data = []
     # control data size
@@ -40,7 +43,7 @@ def read_data_in_imprisonment_format(file_name, embedding, row_size, dictionary,
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line:
+        while line and i < 10:
             i = i + 1
             obj = json.loads(line)
             accusation = obj['meta']['accusation']
@@ -88,6 +91,7 @@ def read_data_in_imprisonment_format(file_name, embedding, row_size, dictionary,
 
 
 # we can only assmue one_hot is true because we are dealing the multi-label
+# data_X shape = [-1, embedding_size * row_size]
 def read_data_in_accu_format(file_name, embedding, row_size, dictionary, accu_dict, one_hot=True):
     data = []
     # control data size
@@ -99,7 +103,7 @@ def read_data_in_accu_format(file_name, embedding, row_size, dictionary, accu_di
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line:
+        while line and i < 10:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['accusation']
@@ -136,6 +140,7 @@ def read_data_in_accu_format(file_name, embedding, row_size, dictionary, accu_di
 
 
 # we can only assmue one_hot is true because we are dealing the multi-label
+# data_X shape = [-1, embedding_size * (row_size + 2)]
 def read_data_in_article_format(file_name, embedding, row_size, dictionary, article_dict, one_hot=True):
     # control data size
     i = 0
@@ -146,7 +151,7 @@ def read_data_in_article_format(file_name, embedding, row_size, dictionary, arti
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line:
+        while line and i < 10:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['relevant_articles']
@@ -192,6 +197,8 @@ def change_label_to_one_hot(label, max):
     return result
 
 
+# accusation size = 203
+# article size = 184
 def change_label_to_n_hot(label, max):
     vector = change_label_to_one_hot(label, max)
     result = np.zeros(shape=(2, embedding_size))
@@ -205,8 +212,27 @@ def change_label_to_n_hot(label, max):
     return result
 
 
+accu_dict, reverse_accu_dict = generator.read_accu()
+article_dict, reverse_article_dict = generator.read_article()
 word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
 data_x = change_fact_to_matrices(
-    "公诉机关指控：2016年3月28日20时许，被告人颜某在本市洪山区马湖新村足球场马路边捡拾到被害人谢某的VIVOX5手机一部",
+    "公诉机关指控：2016年3月28日20时许，被告人颜某在本市洪山区马湖新村足球场马路边捡拾到被害人谢某的VIVOX5手机一部,公诉机关指控：2016年3月28日20时许，被告人颜某在本市洪山区马湖新村足球场马路边捡拾到被害人谢某的VIVOX5手机一部,公诉机关指控：2016年3月28日20时许，被告人颜某在本市洪山区马湖新村足球场马路边捡拾到被害人谢某的VIVOX5手机一部",
     embedding, 10, word_dict)
 print(data_x)
+
+# test part
+train_data_x, train_data_y = read_data_in_accu_format(constant.DATA_TRAIN, embedding, 10, word_dict, accu_dict,
+                                                      one_hot=True)
+print(train_data_x)
+assert len(train_data_x[0]) == embedding_size * 10
+
+train_data_x, train_data_y = read_data_in_article_format(constant.DATA_TRAIN, embedding, 15, word_dict, article_dict,
+                                                         one_hot=True)
+
+print(train_data_x)
+assert len(train_data_x[0]) == embedding_size * 15
+
+train_data_x, train_data_y = read_data_in_imprisonment_format(constant.DATA_TRAIN, embedding, 12, word_dict, accu_dict)
+
+print(train_data_x)
+assert len(train_data_x[0]) == embedding_size * 12

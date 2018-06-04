@@ -72,3 +72,13 @@ legal_instrument/imprisonment_predict/xkf_nn_model/nn-99000.meta
 legal_instrument/imprisonment_predict/xkf_nn_model/nn-99000.index
 legal_instrument/imprisonment_predict/xkf_nn_model/nn-99000.data-00000-of-00001
 legal_instrument/imprisonment_predict/xkf_nn_model/checkpoint
+legal_instrument/imprisonment_predict/dump_data/nn/dump_test_y_label.txt
+legal_instrument/imprisonment_predict/dump_data/nn/dump_test_x.txt
+legal_instrument/article_predict/dump_data/nn/dump_test_y_label.txt
+legal_instrument/article_predict/dump_data/nn/dump_test_x.txt
+legal_instrument/accusation_predict/xkf_nn_model/nn-99000.meta
+legal_instrument/accusation_predict/xkf_nn_model/nn-99000.index
+legal_instrument/imprisonment_predict/xkf_nn_logs/events.out.tfevents.1527650666.SILVERPC
+legal_instrument/accusation_predict/xkf_nn_model/nn-99000.data-00000-of-00001
+legal_instrument/accusation_predict/dump_data/nn/dump_test_y_label.txt
+legal_instrument/accusation_predict/dump_data/nn/dump_test_x.txt

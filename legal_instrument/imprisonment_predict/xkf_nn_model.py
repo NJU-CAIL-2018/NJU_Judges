@@ -153,16 +153,25 @@ try:
 
     with open('./dump_data/nn/dump_valid_y_label.txt', 'rb') as f:
         valid_data_y = pickle.load(f)
+
+    with open('./dump_data/nn/dump_test_x.txt', 'rb') as f:
+        test_data_x = pickle.load(f)
+
+    with open('./dump_data/nn/dump_test_y_label.txt', 'rb') as f:
+        test_data_y = pickle.load(f)
 except:
     print("No dump file read original file! Please wait... "
           "If u want to accelerate this process, please see read_me -> transform_data_to_feature_and_dump")
+    accu_dict, reverse_accu_dict = generator.read_accu()
     word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
 
     print("reading data from training set...")
     train_data_x, train_data_y = generator.read_data_in_imprisonment_format(constant.DATA_TRAIN, embedding,
-                                                                            word_dict)
+                                                                            word_dict, accu_dict)
     valid_data_x, valid_data_y = generator.read_data_in_imprisonment_format(constant.DATA_VALID, embedding,
-                                                                            word_dict)
+                                                                            word_dict, accu_dict)
+    test_data_x, test_data_y = generator.read_data_in_imprisonment_format(constant.DATA_TEST, embedding,
+                                                                          word_dict, accu_dict)
 
 print("reading complete!")
 
@@ -197,6 +206,9 @@ with model.graph.as_default():
         for i in range(iteration):
             x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y)
 
+            x_valid, y_valid = generator.generate_batch(training_batch_size, valid_data_x, valid_data_y)
+            x_test, y_test = generator.generate_batch(training_batch_size, test_data_x, test_data_y)
+
             if i % 1000 == 0:
                 print("step:", i, "train:",
                       sess.run([model.loss], feed_dict={model.x: x, model.y: y, model.keep_prob: 1}))
@@ -217,4 +229,10 @@ with model.graph.as_default():
                 saver.save(sess, "./xkf_nn_model/nn", global_step=i)
 
             _, summary = sess.run([model.train_op, merged], feed_dict={model.x: x, model.y: y, model.keep_prob: 1})
+            writer.add_summary(summary, i)
+            _, summary = sess.run([model.train_op, merged],
+                                  feed_dict={model.x: x_valid, model.y: y_valid, model.keep_prob: 1})
+            writer.add_summary(summary, i)
+            _, summary = sess.run([model.train_op, merged],
+                                  feed_dict={model.x: x_test, model.y: y_test, model.keep_prob: 1})
             writer.add_summary(summary, i)

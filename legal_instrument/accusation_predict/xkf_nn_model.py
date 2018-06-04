@@ -5,7 +5,7 @@ import tensorflow as tf
 class AccusationNN:
     def __init__(self):
         # 参数设置
-        self.training_batch_size = 256
+        self.training_batch_size = 128
         self.valid_batch_size = 256
         self.iteration = 100000
         # embediing size = 128
@@ -192,6 +192,12 @@ try:
 
     with open('./dump_data/nn/dump_valid_y_label.txt', 'rb') as f:
         valid_data_y = pickle.load(f)
+
+    with open('./dump_data/nn/dump_test_x.txt', 'rb') as f:
+        test_data_x = pickle.load(f)
+
+    with open('./dump_data/nn/dump_test_y_label.txt', 'rb') as f:
+        test_data_y = pickle.load(f)
 except:
     print("No dump file read original file! Please wait... "
           "If u want to accelerate this process, please see read_me -> transform_data_to_feature_and_dump")
@@ -202,9 +208,10 @@ except:
                                                                     word_dict, accu_dict, one_hot=True)
     valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, embedding,
                                                                     word_dict, accu_dict, one_hot=True)
+    test_data_x, test_data_y = generator.read_data_in_accu_format(constant.DATA_TEST, embedding,
+                                                                  word_dict, accu_dict, one_hot=True)
 
 print("reading complete!")
-
 # just test generate_accu_batch
 x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y)
 print(x.shape)
@@ -236,6 +243,9 @@ with model.graph.as_default():
         for i in range(iteration):
             x, y = generator.generate_batch(training_batch_size, train_data_x, train_data_y)
 
+            x_valid, y_valid = generator.generate_batch(training_batch_size, valid_data_x, valid_data_y)
+            x_test, y_test = generator.generate_batch(training_batch_size, test_data_x, test_data_y)
+
             if i % 1000 == 0:
                 print("step:", i, "train:", sess.run([model.loss], feed_dict={model.x: x, model.y: y, model.keep_prob: 1}))
                 # train_accuracy = sess.run(accuracy, feed_dict={xs: x, ys: y})
@@ -254,4 +264,8 @@ with model.graph.as_default():
                 saver.save(sess, "./xkf_nn_model/nn", global_step=i)
 
             _, summary = sess.run([model.train_op, merged], feed_dict={model.x: x, model.y: y, model.keep_prob: 1})
+            writer.add_summary(summary, i)
+            _, summary = sess.run([model.train_op, merged], feed_dict={model.x: x_valid, model.y: y_valid, model.keep_prob: 1})
+            writer.add_summary(summary, i)
+            _, summary = sess.run([model.train_op, merged], feed_dict={model.x: x_test, model.y: y_test, model.keep_prob: 1})
             writer.add_summary(summary, i)

@@ -15,6 +15,8 @@ def dump_data_for_nn():
                                                                     word_dict, accu_dict, one_hot=True)
     valid_data_x, valid_data_y = generator.read_data_in_accu_format(constant.DATA_VALID, embedding,
                                                                     word_dict, accu_dict, one_hot=True)
+    test_data_x, test_data_y = generator.read_data_in_accu_format(constant.DATA_TEST, embedding,
+                                                                    word_dict, accu_dict, one_hot=True)
     print("reading complete!")
 
     # 随机打乱数据
@@ -26,6 +28,9 @@ def dump_data_for_nn():
     valid_data_x = valid_data_x[permutation_for_valid, :]
     valid_data_y = valid_data_y[permutation_for_valid, :]
 
+    permutation_for_test = np.random.permutation(test_data_y.shape[0])
+    test_data_x = test_data_x[permutation_for_test, :]
+    test_data_y = test_data_y[permutation_for_test, :]
 
     with open('./dump_data/nn/dump_train_x.txt', 'wb') as f:
         pickle.dump(train_data_x, f)
@@ -38,6 +43,12 @@ def dump_data_for_nn():
 
     with open('./dump_data/nn/dump_valid_y_label.txt', 'wb') as f:
         pickle.dump(valid_data_y, f)
+
+    with open('./dump_data/nn/dump_test_x.txt', 'wb') as f:
+        pickle.dump(test_data_x, f)
+
+    with open('./dump_data/nn/dump_test_y_label.txt', 'wb') as f:
+        pickle.dump(test_data_y, f)
 
     print("dump complete!")
 

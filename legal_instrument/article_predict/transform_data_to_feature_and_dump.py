@@ -3,8 +3,8 @@ import pickle
 import numpy as np
 
 import legal_instrument.data_util.generate_batch as generator
+import legal_instrument.data_util.generate_batch_temp as matrix_generator
 import legal_instrument.system_path as constant
-
 
 def dump_data_for_nn():
     article_dict, reverse_article_dict = generator.read_article()
@@ -54,6 +54,53 @@ def dump_data_for_nn():
     print("dump complete!")
 
 
+def dump_data_for_cnn():
+    article_dict, reverse_article_dict = generator.read_article()
+    word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
+
+    print("reading data from training set...")
+    train_data_x, train_data_y = matrix_generator.read_data_in_article_format_with_accu(constant.DATA_TRAIN, embedding, 10,
+                                                                    word_dict, article_dict, one_hot=True)
+    valid_data_x, valid_data_y = matrix_generator.read_data_in_article_format_with_accu(constant.DATA_VALID, embedding, 10,
+                                                                    word_dict, article_dict, one_hot=True)
+    test_data_x, test_data_y = matrix_generator.read_data_in_article_format_with_accu(constant.DATA_TEST, embedding, 10,
+                                                                  word_dict, article_dict, one_hot=True)
+    print("reading complete!")
+
+    # 随机打乱数据
+    permutation_for_train = np.random.permutation(train_data_x.shape[0])
+    train_data_x = train_data_x[permutation_for_train, :]
+    train_data_y = train_data_y[permutation_for_train]
+
+    permutation_for_valid = np.random.permutation(valid_data_y.shape[0])
+    valid_data_x = valid_data_x[permutation_for_valid, :]
+    valid_data_y = valid_data_y[permutation_for_valid, :]
+
+    permutation_for_test = np.random.permutation(test_data_y.shape[0])
+    test_data_x = test_data_x[permutation_for_test, :]
+    test_data_y = test_data_y[permutation_for_test, :]
+
+    with open('./dump_data/cnn/dump_train_x.txt', 'wb') as f:
+        pickle.dump(train_data_x, f)
+
+    with open('./dump_data/cnn/dump_train_y_label.txt', 'wb') as f:
+        pickle.dump(train_data_y, f)
+
+    with open('./dump_data/cnn/dump_valid_x.txt', 'wb') as f:
+        pickle.dump(valid_data_x, f)
+
+    with open('./dump_data/cnn/dump_valid_y_label.txt', 'wb') as f:
+        pickle.dump(valid_data_y, f)
+
+    with open('./dump_data/cnn/dump_test_x.txt', 'wb') as f:
+        pickle.dump(test_data_x, f)
+
+    with open('./dump_data/cnn/dump_test_y_label.txt', 'wb') as f:
+        pickle.dump(test_data_y, f)
+
+    print("dump complete!")
+
+
 def dump_data_for_xgboost():
     article_dict, reverse_article_dict = generator.read_article()
     word_dict, embedding, reverse_dictionary = generator.get_dictionary_and_embedding()
@@ -90,5 +137,6 @@ def dump_data_for_xgboost():
 
     print("dump complete!")
 
-dump_data_for_nn()
+#dump_data_for_nn()
+dump_data_for_cnn()
 #dump_data_for_xgboost()

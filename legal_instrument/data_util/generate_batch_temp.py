@@ -64,7 +64,7 @@ def read_data_in_imprisonment_format_with_accu(file_name, embedding, row_size, d
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line and i < 10:
+        while line and i < 10000:
             i = i + 1
             obj = json.loads(line)
             accusation = obj['meta']['accusation']
@@ -91,14 +91,14 @@ def read_data_in_imprisonment_format_with_accu(file_name, embedding, row_size, d
 
             data_list = change_fact_to_matrices(obj['fact'], embedding, row_size, dictionary)
             for data in data_list:
-                data_x.append(np.concatenate((data, change_label_to_one_hot(accu, len(accu_dict)))))
+                data_x.append(np.concatenate((data, change_label_to_n_hot(accu, len(accu_dict)))))
                 data_y.append(cur_y)
 
             if i % 1000 == 0:
                 print("read ", i, "lines")
             line = f.readline()
 
-    result_x = np.ndarray([len(data_x), embedding_size * row_size + len(accu_dict) + 1])
+    result_x = np.ndarray([len(data_x), embedding_size * row_size + 2 * embedding_size])
     result_y = np.ndarray([len(data_y), 3], dtype='float')
     for i in range(len(data_x)):
         result_x[i] = data_x[i]
@@ -122,7 +122,7 @@ def read_data_in_imprisonment_format(file_name, embedding, row_size, dictionary,
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line and i < 10:
+        while line:
             i = i + 1
             obj = json.loads(line)
             accusation = obj['meta']['accusation']
@@ -182,7 +182,7 @@ def read_data_in_accu_format(file_name, embedding, row_size, dictionary, accu_di
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line and i < 10:
+        while line and i < 10000:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['accusation']
@@ -230,7 +230,7 @@ def read_data_in_article_format(file_name, embedding, row_size, dictionary, arti
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line and i < 10:
+        while line:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['relevant_articles']
@@ -276,7 +276,7 @@ def read_data_in_article_format_with_accu(file_name, embedding, row_size, dictio
     with open(file_name, "r", encoding="UTF-8") as f:
         line = f.readline()
 
-        while line and i < 10:
+        while line and i < 10000:
             i = i + 1
             obj = json.loads(line)
             l = obj['meta']['relevant_articles']
@@ -292,14 +292,14 @@ def read_data_in_article_format_with_accu(file_name, embedding, row_size, dictio
 
             data_list = change_fact_to_matrices(obj['fact'], embedding, row_size, dictionary)
             for data in data_list:
-                data_x.append(np.concatenate((data, change_label_to_one_hot(accu, len(accu_dict)))))
+                data_x.append(np.concatenate((data, change_label_to_n_hot(accu, len(accu_dict)))))
                 data_y.append(article_y)
 
             if i % 1000 == 0:
                 print("read ", i, "lines")
             line = f.readline()
 
-    result_x = np.ndarray([len(data_x), embedding_size * row_size + len(accu_dict) + 1])
+    result_x = np.ndarray([len(data_x), embedding_size * row_size + 2 * embedding_size])
     if one_hot:
         result_y = np.ndarray([len(data_y), len(article_dict) + 1])
         for i in range(len(data_x)):
@@ -339,7 +339,7 @@ def change_label_to_n_hot(label, max):
         else:
             result[1][i] = 0
 
-    return result
+    return result.reshape(2 * embedding_size)
 
 
 accu_dict, reverse_accu_dict = generator.read_accu()
@@ -353,31 +353,31 @@ print(data_x)
 #     print(len(data_x[i]))
 
 # test part
-train_data_x, train_data_y = read_data_in_accu_format(constant.DATA_TRAIN, embedding, 10, word_dict, accu_dict,
-                                                      one_hot=True)
-print(train_data_x)
-assert len(train_data_x[0]) == embedding_size * 10
-
-train_data_x, train_data_y = read_data_in_article_format(constant.DATA_TRAIN, embedding, 15, word_dict, article_dict,
-                                                         one_hot=True)
-
-print(train_data_x)
-assert len(train_data_x[0]) == embedding_size * 15
-
-train_data_x, train_data_y = read_data_in_article_format_with_accu(constant.DATA_TRAIN, embedding, 15, word_dict,
-                                                                   article_dict,
-                                                                   one_hot=True)
-
-print(train_data_x)
-assert len(train_data_x[0]) == embedding_size * 15 + len(accu_dict) + 1
-
-train_data_x, train_data_y = read_data_in_imprisonment_format(constant.DATA_TRAIN, embedding, 13, word_dict, accu_dict)
-
-print(train_data_x)
-assert len(train_data_x[0]) == embedding_size * 13
-
-train_data_x, train_data_y = read_data_in_imprisonment_format_with_accu(constant.DATA_TRAIN, embedding, 12, word_dict,
-                                                                        accu_dict)
-
-print(train_data_x)
-assert len(train_data_x[0]) == embedding_size * 12 + len(accu_dict) + 1
+# train_data_x, train_data_y = read_data_in_accu_format(constant.DATA_TRAIN, embedding, 10, word_dict, accu_dict,
+#                                                       one_hot=True)
+# print(train_data_x)
+# assert len(train_data_x[0]) == embedding_size * 10
+#
+# train_data_x, train_data_y = read_data_in_article_format(constant.DATA_TRAIN, embedding, 15, word_dict, article_dict,
+#                                                          one_hot=True)
+#
+# print(train_data_x)
+# assert len(train_data_x[0]) == embedding_size * 15
+#
+# train_data_x, train_data_y = read_data_in_article_format_with_accu(constant.DATA_TRAIN, embedding, 15, word_dict,
+#                                                                    article_dict,
+#                                                                    one_hot=True)
+#
+# print(train_data_x)
+# assert len(train_data_x[0]) == embedding_size * 15 + 2 * embedding_size
+#
+# train_data_x, train_data_y = read_data_in_imprisonment_format(constant.DATA_TRAIN, embedding, 13, word_dict, accu_dict)
+#
+# print(train_data_x)
+# assert len(train_data_x[0]) == embedding_size * 13
+#
+# train_data_x, train_data_y = read_data_in_imprisonment_format_with_accu(constant.DATA_TRAIN, embedding, 12, word_dict,
+#                                                                         accu_dict)
+#
+# print(train_data_x)
+# assert len(train_data_x[0]) == embedding_size * 12 + 2 * embedding_size
